@@ -1,0 +1,93 @@
+import { Application } from "https://deno.land/x/abc@v1.3.3/mod.ts";
+import { DB } from "https://deno.land/x/sqlite@v2.5.0/mod.ts";
+import { abcCors } from "https://deno.land/x/cors/mod.ts";
+import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
+import { v4 } from "https://deno.land/std/uuid/mod.ts";
+
+const app = new Application();
+const db = new DB("./knowledge_checklist.db");
+const PORT = 8080;
+const allowedHeaders = [
+  "Authorization",
+  "Content-Type",
+  "Accept",
+  "Origin",
+  "User-Agent",
+];
+
+app
+  .use(allowCors())
+  .post("/users", postSignup)
+  .post("/sessions", postLogin)
+  .start({ port: PORT });
+console.log(`Server running on http://localhost:${PORT}`);
+
+function allowCors() {
+  return abcCors({
+    origin: `http://localhost:3000`,
+    headers: allowedHeaders,
+    credentials: true,
+  });
+}
+
+function validateEmail(email) {
+  if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+    return true;
+  }
+  return false;
+}
+
+async function postSignup(server) {
+  const { email, password } = await server.body;
+  const salt = await bcrypt.genSalt(8);
+  const passwordEncrypted = await bcrypt.hash(password, salt);
+
+  if (!validateEmail(email)) {
+    return server.json({ error: "Enter valid email" }, 400);
+  }
+
+  const checkRepeatEmails = [
+    ...db.query("SELECT COUNT(*) FROM users WHERE email = ?", [email]),
+  ];
+
+  if (checkRepeatEmails[0][0]) {
+    return server.json({ error: "Email already in use" }, 400);
+  }
+
+  db.query(
+    "INSERT INTO users (email, encrypted_password, created_at, updated_at, admin) VALUES (?, ?, datetime('now'), datetime('now'), 1)",
+    [email, passwordEncrypted]
+  );
+  server.json({ success: true }, 200);
+}
+
+async function postLogin(server) {
+  const { email, password } = await server.body;
+  const authenticated = [
+    ...db.query("SELECT * FROM users WHERE email = ?", [email]).asObjects(),
+  ];
+  if (
+    authenticated.length &&
+    (await bcrypt.compare(password, authenticated[0].encrypted_password))
+  ) {
+    makeSession(authenticated[0].id, server);
+    server.json({ success: true });
+  } else {
+    server.json({ success: false });
+  }
+}
+
+async function makeSession(userID, server) {
+  const sessionID = v4.generate();
+  await db.query(
+    `INSERT INTO sessions (uuid, user_id, created_at) VALUES (?, ?, datetime('now'))`,
+    [sessionID, userID]
+  );
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + 1);
+  server.setCookie({
+    name: "sessionId",
+    value: sessionID,
+    expires: expiryDate,
+  });
+}
