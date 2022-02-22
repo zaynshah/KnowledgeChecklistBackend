@@ -21,8 +21,6 @@ await db.query(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
     cohort_id INTEGER NOT NULL,
-    first_name TEXT NOT NULL,
-    last_name TEXT NOT NULL,
     encrypted_password TEXT NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
