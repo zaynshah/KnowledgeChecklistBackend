@@ -17,6 +17,7 @@ const allowedHeaders = [
 
 app
   .use(allowCors())
+  .get("/:cohort/LOs", getLOs)
   .post("/users", postSignup)
   .post("/sessions", postLogin)
   .start({ port: PORT });
@@ -28,6 +29,21 @@ function allowCors() {
     headers: allowedHeaders,
     credentials: true,
   });
+}
+
+async function getLOs(server) {
+  const { cohort } = await server.params;
+  const query = `
+    SELECT *
+    FROM learning_objectives
+    WHERE cohort_id = ?
+  `;
+  const LOs = [...(await db.query(query, [cohort]).asObjects())];
+  if (LOs.length !== 0) {
+    return server.json(LOs, 200);
+  } else {
+    return server.json({ error: "Cohort does not exist" }, 400);
+  }
 }
 
 function validateEmail(email) {
