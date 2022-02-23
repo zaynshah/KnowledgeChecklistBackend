@@ -32,6 +32,7 @@ await db.query(
   `CREATE TABLE sessions (
     id TEXT PRIMARY KEY NOT NULL,
     created_at DATETIME NOT NULL,
-    user_id INTEGER NOT NULL
+    user_id INTEGER NOT NULL,
+    email TEXT NOT NULL
   )`
 );
