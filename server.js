@@ -7,9 +7,20 @@ import { v4 } from "https://deno.land/std/uuid/mod.ts";
 const app = new Application();
 const db = new DB("./knowledge_checklist.db");
 const PORT = 8080;
-const allowedHeaders = ["Authorization", "Content-Type", "Accept", "Origin", "User-Agent"];
+const allowedHeaders = [
+  "Authorization",
+  "Content-Type",
+  "Accept",
+  "Origin",
+  "User-Agent",
+];
 
-app.use(allowCors()).get("/:cohort/LOs", getLOs).post("/users", postSignup).post("/sessions", postLogin).start({ port: PORT });
+app
+  .use(allowCors())
+  .get("/:cohort/LOs", getLOs)
+  .post("/users", postSignup)
+  .post("/sessions", postLogin)
+  .start({ port: PORT });
 console.log(`Server running on http://localhost:${PORT}`);
 
 function allowCors() {
@@ -51,14 +62,19 @@ async function postSignup(server) {
     return server.json({ error: "Enter valid email" }, 400);
   }
 
-  const checkRepeatEmails = [...db.query("SELECT COUNT(*) FROM users WHERE email = ?", [email])];
+  const checkRepeatEmails = [
+    ...db.query("SELECT COUNT(*) FROM users WHERE email = ?", [email]),
+  ];
 
   if (checkRepeatEmails[0][0]) {
     return server.json({ error: "Email already in use" }, 400);
   }
 
   db.query(
-    "INSERT INTO users (email, cohort_id, encrypted_password, created_at, updated_at, admin) VALUES (?, ?,?, datetime('now'), datetime('now'), 1)",
+    `
+    INSERT INTO users (email, cohort_id, encrypted_password, created_at, updated_at, admin) 
+    VALUES (?, ?, ?, datetime('now'), datetime('now'), 0)
+  `,
     [email, cohort_id, passwordEncrypted]
   );
   server.json({ success: true }, 200);
@@ -66,8 +82,13 @@ async function postSignup(server) {
 
 async function postLogin(server) {
   const { email, password } = await server.body;
-  const authenticated = [...db.query("SELECT * FROM users WHERE email = ?", [email]).asObjects()];
-  if (authenticated.length && (await bcrypt.compare(password, authenticated[0].encrypted_password))) {
+  const authenticated = [
+    ...db.query("SELECT * FROM users WHERE email = ?", [email]).asObjects(),
+  ];
+  if (
+    authenticated.length &&
+    (await bcrypt.compare(password, authenticated[0].encrypted_password))
+  ) {
     makeSession(authenticated[0].id, server);
     server.json({ success: true });
   } else {
@@ -77,7 +98,10 @@ async function postLogin(server) {
 
 async function makeSession(userID, server) {
   const sessionID = v4.generate();
-  await db.query(`INSERT INTO sessions (uuid, user_id, created_at) VALUES (?, ?, datetime('now'))`, [sessionID, userID]);
+  await db.query(
+    `INSERT INTO sessions (id, user_id, created_at) VALUES (?, ?, datetime('now'))`,
+    [sessionID, userID]
+  );
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 1);
   server.setCookie({
