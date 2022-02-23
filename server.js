@@ -71,10 +71,7 @@ async function postSignup(server) {
   }
 
   db.query(
-    `
-    INSERT INTO users (email, cohort_id, encrypted_password, created_at, updated_at, admin) 
-    VALUES (?, ?, ?, datetime('now'), datetime('now'), 0)
-  `,
+    "INSERT INTO users (email, cohort_id, encrypted_password, created_at, updated_at, admin) VALUES (?, ?,?, datetime('now'), datetime('now'), 0)",
     [email, cohort_id, passwordEncrypted]
   );
   server.json({ success: true }, 200);
@@ -82,26 +79,18 @@ async function postSignup(server) {
 
 async function postLogin(server) {
   const { email, password } = await server.body;
-  const authenticated = [
-    ...db.query("SELECT * FROM users WHERE email = ?", [email]).asObjects(),
-  ];
-  if (
-    authenticated.length &&
-    (await bcrypt.compare(password, authenticated[0].encrypted_password))
-  ) {
-    makeSession(authenticated[0].id, server);
+  const authenticated = [...db.query("SELECT * FROM users WHERE email = ?", [email]).asObjects()];
+  if (authenticated.length && (await bcrypt.compare(password, authenticated[0].encrypted_password))) {
+    makeSession(authenticated[0].id, authenticated[0].email, server);
     server.json({ success: true });
   } else {
     server.json({ success: false });
   }
 }
 
-async function makeSession(userID, server) {
+async function makeSession(userID, e, server) {
   const sessionID = v4.generate();
-  await db.query(
-    `INSERT INTO sessions (id, user_id, created_at) VALUES (?, ?, datetime('now'))`,
-    [sessionID, userID]
-  );
+  await db.query(`INSERT INTO sessions (id, user_id,email, created_at) VALUES (?, ?,?, datetime('now'))`, [sessionID, userID, e]);
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 1);
   server.setCookie({
@@ -109,4 +98,6 @@ async function makeSession(userID, server) {
     value: sessionID,
     expires: expiryDate,
   });
+  server.setCookie({ name: "userID", value: userID, expires: expiryDate });
+  server.setCookie({ name: "email", value: e, expires: expiryDate });
 }
