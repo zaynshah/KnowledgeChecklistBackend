@@ -18,6 +18,7 @@ const allowedHeaders = [
 app
   .use(allowCors())
   .get("/:user_id/LOs", getLOs)
+  .get("/cohorts", getCohorts)
   .post("/users", postSignup)
   .post("/sessions", postLogin)
   .start({ port: PORT });
@@ -44,6 +45,15 @@ async function getLOs(server) {
   } else {
     return server.json({ error: "Student does not exist" }, 400);
   }
+}
+
+async function getCohorts(server) {
+  const query = `
+    SELECT DISTINCT cohort_id 
+    FROM learning_objectives
+  `;
+  const cohorts = [...(await db.query(query).asObjects())];
+  return server.json(cohorts, 200);
 }
 
 function validateEmail(email) {
