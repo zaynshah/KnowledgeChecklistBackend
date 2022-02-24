@@ -40,6 +40,7 @@ await db.query(
 await db.query(
   `CREATE TABLE results (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
     email TEXT NOT NULL,
     cohort_id INTEGER NOT NULL,
     topic TEXT NOT NULL,

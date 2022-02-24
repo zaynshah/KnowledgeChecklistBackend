@@ -30,4 +30,4 @@ INSERT INTO learning_objectives(cohort_id, topic, learning_objective) VALUES (3,
 -- INSERT INTO users(email, cohort_id, encrypted_password, created_at, updated_at, admin) VALUES('admin@sigmalabs.co.uk', 0, '$2a$08$1pO8zSzvfNwvyW/IRRdgk.Ac7cYQHKEob4kjGEZZqcVUfS/VyikKm', datetime('now'), datetime('now'), 1)
 
 
-INSERT INTO results(email, cohort_id, topic,learning_objective) VALUES ('zayshah1@hotmail.co.uk', 1, 'HTML/CSS','Understand what parent and child is');
+-- INSERT INTO results(usero.uk', 1, 'HTML/CSS','Understand what parent and child is');

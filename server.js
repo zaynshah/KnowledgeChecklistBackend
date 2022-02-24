@@ -9,7 +9,7 @@ const db = new DB("./knowledge_checklist.db");
 const PORT = 8080;
 const allowedHeaders = ["Authorization", "Content-Type", "Accept", "Origin", "User-Agent"];
 
-app.use(allowCors()).get("/:cohort/LOs", getLOs).post("/users", postSignup).post("/sessions", postLogin).start({ port: PORT });
+app.use(allowCors()).get("/:user_id/LOs", getLOs).post("/users", postSignup).post("/sessions", postLogin).start({ port: PORT });
 console.log(`Server running on http://localhost:${PORT}`);
 
 function allowCors() {
@@ -21,17 +21,19 @@ function allowCors() {
 }
 
 async function getLOs(server) {
-  const { cohort } = await server.params;
+  const { user_id } = await server.params;
+
   const query = `
     SELECT *
-    FROM learning_objectives
-    WHERE cohort_id = ?
+    FROM results
+    WHERE user_id = ?
   `;
-  const LOs = [...(await db.query(query, [cohort]).asObjects())];
+  const LOs = [...(await db.query(query, [user_id]).asObjects())];
+  console.log(LOs);
   if (LOs.length !== 0) {
     return server.json(LOs, 200);
   } else {
-    return server.json({ error: "Cohort does not exist" }, 400);
+    return server.json({ error: "Student does not exist" }, 400);
   }
 }
 
@@ -64,11 +66,13 @@ async function postSignup(server) {
 
   const check = [
     ...db.query(
-      "SELECT users.email,users.cohort_id,learning_objectives.topic,learning_objectives.learning_objective FROM learning_objectives JOIN users ON users.cohort_id = learning_objectives.cohort_id WHERE users.email =?",
+      "SELECT users.id, users.email,users.cohort_id,learning_objectives.topic,learning_objectives.learning_objective FROM learning_objectives JOIN users ON users.cohort_id = learning_objectives.cohort_id WHERE users.email =?",
       [email]
     ),
   ];
-  check.forEach((i) => db.query(`INSERT INTO results (email,cohort_id,topic,learning_objective) VALUES ('${i[0]}','${i[1]}','${i[2]}','${i[3]}')`));
+  check.forEach((i) =>
+    db.query(`INSERT INTO results (user_id,email,cohort_id,topic,learning_objective) VALUES ('${i[0]}','${i[1]}','${i[2]}','${i[3]}','${i[4]}')`)
+  );
 
   server.json({ success: true }, 200);
 }
