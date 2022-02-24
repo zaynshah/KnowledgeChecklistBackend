@@ -7,20 +7,9 @@ import { v4 } from "https://deno.land/std/uuid/mod.ts";
 const app = new Application();
 const db = new DB("./knowledge_checklist.db");
 const PORT = 8080;
-const allowedHeaders = [
-  "Authorization",
-  "Content-Type",
-  "Accept",
-  "Origin",
-  "User-Agent",
-];
+const allowedHeaders = ["Authorization", "Content-Type", "Accept", "Origin", "User-Agent"];
 
-app
-  .use(allowCors())
-  .get("/:cohort/LOs", getLOs)
-  .post("/users", postSignup)
-  .post("/sessions", postLogin)
-  .start({ port: PORT });
+app.use(allowCors()).get("/:cohort/LOs", getLOs).post("/users", postSignup).post("/sessions", postLogin).start({ port: PORT });
 console.log(`Server running on http://localhost:${PORT}`);
 
 function allowCors() {
@@ -62,9 +51,7 @@ async function postSignup(server) {
     return server.json({ error: "Enter valid email" }, 400);
   }
 
-  const checkRepeatEmails = [
-    ...db.query("SELECT COUNT(*) FROM users WHERE email = ?", [email]),
-  ];
+  const checkRepeatEmails = [...db.query("SELECT COUNT(*) FROM users WHERE email = ?", [email])];
 
   if (checkRepeatEmails[0][0]) {
     return server.json({ error: "Email already in use" }, 400);
@@ -74,6 +61,15 @@ async function postSignup(server) {
     "INSERT INTO users (email, cohort_id, encrypted_password, created_at, updated_at, admin) VALUES (?, ?,?, datetime('now'), datetime('now'), 0)",
     [email, cohort_id, passwordEncrypted]
   );
+
+  const check = [
+    ...db.query(
+      "SELECT users.email,users.cohort_id,learning_objectives.topic,learning_objectives.learning_objective FROM learning_objectives JOIN users ON users.cohort_id = learning_objectives.cohort_id WHERE users.email =?",
+      [email]
+    ),
+  ];
+  check.forEach((i) => db.query(`INSERT INTO results (email,cohort_id,topic,learning_objective) VALUES ('${i[0]}','${i[1]}','${i[2]}','${i[3]}')`));
+
   server.json({ success: true }, 200);
 }
 
