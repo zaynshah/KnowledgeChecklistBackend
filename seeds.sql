@@ -27,7 +27,7 @@ INSERT INTO learning_objectives(cohort_id, topic, learning_objective) VALUES (3,
 INSERT INTO learning_objectives(cohort_id, topic, learning_objective) VALUES (3, 'React', 'Understand the difference between class and functional components');
 INSERT INTO learning_objectives(cohort_id, topic, learning_objective) VALUES (3, 'React', 'Be able to create a React application with create-react-app');
 
--- INSERT INTO users(email, cohort_id, encrypted_password, created_at, updated_at, admin) VALUES('admin@sigmalabs.co.uk', 0, '$2a$08$1pO8zSzvfNwvyW/IRRdgk.Ac7cYQHKEob4kjGEZZqcVUfS/VyikKm', datetime('now'), datetime('now'), 1)
+INSERT INTO users(email, cohort_id, encrypted_password, created_at, updated_at, admin) VALUES('admin@sigmalabs.co.uk', 0, '$2a$08$1pO8zSzvfNwvyW/IRRdgk.Ac7cYQHKEob4kjGEZZqcVUfS/VyikKm', datetime('now'), datetime('now'), true)
 
 
 -- INSERT INTO results(usero.uk', 1, 'HTML/CSS','Understand what parent and child is');
