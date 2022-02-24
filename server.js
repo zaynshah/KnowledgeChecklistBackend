@@ -18,6 +18,7 @@ const allowedHeaders = [
 app
   .use(allowCors())
   .get("/:user_id/LOs", getLOs)
+  .get("/cohorts/:cohort_id/LOs", getCohortLOs)
   .get("/cohorts", getCohorts)
   .post("/users", postSignup)
   .post("/sessions", postLogin)
@@ -45,6 +46,17 @@ async function getLOs(server) {
   } else {
     return server.json({ error: "Student does not exist" }, 400);
   }
+}
+
+async function getCohortLOs(server) {
+  const { cohort_id } = await server.params;
+  const query = `
+    SELECT *
+    FROM learning_objectives
+    WHERE cohort_id = ?
+  `;
+  const cohortLOs = [...(await db.query(query, [cohort_id]).asObjects())];
+  return server.json(cohortLOs);
 }
 
 async function getCohorts(server) {
