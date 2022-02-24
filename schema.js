@@ -36,3 +36,14 @@ await db.query(
     email TEXT NOT NULL
   )`
 );
+
+await db.query(
+  `CREATE TABLE results (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    cohort_id INTEGER NOT NULL,
+    topic TEXT NOT NULL,
+    learning_objective TEXT NOT NULL,
+    score INTEGER DEFAULT 1
+    )`
+);
