@@ -21,6 +21,8 @@ app
   .get("/cohorts/:cohort_id/LOs", getCohortLOs)
   .get("/cohorts", getCohorts)
   .post("/postLO", postLO)
+  .get("/students/:cohort_id/results", getStudents)
+  .get("/student/:user_id/data", getStudentData)
   .post("/users", postSignup)
   .post("/sessions", postLogin)
   .start({ port: PORT });
@@ -41,12 +43,44 @@ async function getLOs(server) {
     FROM results
     WHERE user_id = ?
   `;
-  const LOs = [...(await db.query(query, [user_id]).asObjects())];
+  const LOs = [...(await db.query(query, [user_id]))];
+
   if (LOs.length !== 0) {
     return server.json(LOs, 200);
   } else {
     return server.json({ error: "Student does not exist" }, 400);
   }
+}
+
+async function getStudents(server) {
+  const { cohort_id } = await server.params;
+  const query = `
+    SELECT DISTINCT email, user_id
+    FROM results
+    WHERE cohort_id = ?
+  `;
+  const LOs = [...(await db.query(query, [cohort_id]).asObjects())];
+  // if (LOs.length !== 0) {
+  return server.json(LOs, 200);
+  // } else {
+  //   return server.json({ error: "Student does not exist" }, 400);
+  // }
+}
+
+async function getStudentData(server) {
+  const { user_id } = await server.params;
+  const query = `
+  SELECT *
+  FROM results
+  WHERE user_id = ?
+  ORDER BY id ASC
+  `;
+  const LOs = [...(await db.query(query, [user_id]).asObjects())];
+  // if (LOs.length !== 0) {
+  return server.json(LOs, 200);
+  // } else {
+  //   return server.json({ error: "Student does not exist" }, 400);
+  // }
 }
 
 async function getCohortLOs(server) {
