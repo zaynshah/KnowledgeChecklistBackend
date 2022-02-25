@@ -166,12 +166,3 @@ async function makeSession(userID, e, server, isAdmin) {
   server.setCookie({ name: "email", value: e, expires: expiryDate });
   server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate });
 }
-
-const query = `
-SELECT DISTINCT email, user_id
-FROM results
-WHERE cohort_id = 1
-`;
-const LOs = [...(await db.query(query).asObjects())];
-
-console.log(LOs);
