@@ -20,6 +20,7 @@ app
   .get("/:user_id/LOs", getLOs)
   .get("/cohorts/:cohort_id/LOs", getCohortLOs)
   .get("/cohorts", getCohorts)
+  .post("/postLO", postLO)
   .post("/users", postSignup)
   .post("/sessions", postLogin)
   .start({ port: PORT });
@@ -66,6 +67,15 @@ async function getCohorts(server) {
   `;
   const cohorts = [...(await db.query(query).asObjects())];
   return server.json(cohorts, 200);
+}
+
+async function postLO(server) {
+  const { cohort_id, topic, learning_objective } = await server.body;
+  const query = `
+    INSERT INTO learning_objectives(cohort_id, topic, learning_objective)
+    VALUES (?, ?, ?)
+  `;
+  db.query(query, [cohort_id, topic, learning_objective]);
 }
 
 function validateEmail(email) {
