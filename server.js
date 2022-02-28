@@ -18,6 +18,11 @@ const allowedHeaders = [
 app
   .use(allowCors())
   .get("/:user_id/LOs", getLOs)
+  .get("/cohorts/:cohort_id/LOs", getCohortLOs)
+  .get("/cohorts", getCohorts)
+  .post("/postLO", postLO)
+  .get("/students/:cohort_id/results", getStudents)
+  .get("/student/:user_id/data", getStudentData)
   .post("/users", postSignup)
   .post("/sessions", postLogin)
   .post("/:user_id/LOs", postScore)
@@ -39,12 +44,80 @@ async function getLOs(server) {
     FROM results
     WHERE user_id = ?
   `;
-  const LOs = [...(await db.query(query, [user_id]).asObjects())];
+  const LOs = [...(await db.query(query, [user_id]))];
+
   if (LOs.length !== 0) {
     return server.json(LOs, 200);
   } else {
     return server.json({ error: "Student does not exist" }, 400);
   }
+}
+
+async function getStudents(server) {
+  const { cohort_id } = await server.params;
+  const query = `
+    SELECT DISTINCT email, user_id
+    FROM results
+    WHERE cohort_id = ?
+  `;
+  const LOs = [...(await db.query(query, [cohort_id]).asObjects())];
+  // if (LOs.length !== 0) {
+  return server.json(LOs, 200);
+  // } else {
+  //   return server.json({ error: "Student does not exist" }, 400);
+  // }
+}
+
+async function getStudentData(server) {
+  const { user_id } = await server.params;
+  const query = `
+  SELECT *
+  FROM results
+  WHERE user_id = ?
+  ORDER BY id ASC
+  `;
+  const LOs = [...(await db.query(query, [user_id]).asObjects())];
+  // if (LOs.length !== 0) {
+  return server.json(LOs, 200);
+  // } else {
+  //   return server.json({ error: "Student does not exist" }, 400);
+  // }
+}
+
+async function getCohortLOs(server) {
+  const { cohort_id } = await server.params;
+  const query = `
+    SELECT *
+    FROM learning_objectives
+    WHERE cohort_id = ?
+  `;
+  const cohortLOs = [...(await db.query(query, [cohort_id]).asObjects())];
+  return server.json(cohortLOs);
+}
+
+async function getCohorts(server) {
+  const query = `
+    SELECT DISTINCT cohort_id 
+    FROM learning_objectives
+  `;
+  const cohorts = [...(await db.query(query).asObjects())];
+  return server.json(cohorts, 200);
+}
+
+async function postLO(server) {
+  const { cohort_id, topic, learning_objective } = await server.body;
+  const query = `
+    INSERT INTO learning_objectives(cohort_id, topic, learning_objective)
+    VALUES (?, ?, ?)
+  `;
+  db.query(query, [cohort_id, topic, learning_objective]);
+}
+
+function validateEmail(email) {
+  if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+    return true;
+  }
+  return false;
 }
 
 async function postSignup(server) {
