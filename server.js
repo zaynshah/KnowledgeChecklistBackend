@@ -20,6 +20,7 @@ app
   .get("/:user_id/LOs", getLOs)
   .post("/users", postSignup)
   .post("/sessions", postLogin)
+  .post("/:user_id/LOs", postScore)
   .start({ port: PORT });
 console.log(`Server running on http://localhost:${PORT}`);
 
@@ -44,13 +45,6 @@ async function getLOs(server) {
   } else {
     return server.json({ error: "Student does not exist" }, 400);
   }
-}
-
-function validateEmail(email) {
-  if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
-    return true;
-  }
-  return false;
 }
 
 async function postSignup(server) {
@@ -111,6 +105,29 @@ async function postLogin(server) {
   }
 }
 
+async function postScore(server) {
+  const { userID, LO, score } = await server.body;
+
+  console.log(userID);
+  console.log(LO);
+  console.log(score);
+
+  db.query(
+    `UPDATE results SET score = ? WHERE user_id = ? AND learning_objective = ?`,
+    [score, userID, LO]
+  );
+
+  const LOs = [
+    ...db
+      .query("SELECT * FROM results WHERE user_id = ?", [userID])
+      .asObjects(),
+  ];
+
+  console.log(LOs);
+
+  return server.json({ LOs: LOs }, 200);
+}
+
 async function makeSession(userID, e, server, isAdmin) {
   const sessionID = v4.generate();
   await db.query(
@@ -127,4 +144,11 @@ async function makeSession(userID, e, server, isAdmin) {
   server.setCookie({ name: "userID", value: userID, expires: expiryDate });
   server.setCookie({ name: "email", value: e, expires: expiryDate });
   server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate });
+}
+
+function validateEmail(email) {
+  if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+    return true;
+  }
+  return false;
 }
