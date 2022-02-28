@@ -189,11 +189,3 @@ async function makeSession(userID, e, server, isAdmin) {
   server.setCookie({ name: "email", value: e, expires: expiryDate });
   server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate });
 }
-
-const check = [
-  ...db.query(
-    "SELECT DISTINCT(users.email), users.cohort_id, users.id FROM learning_objectives JOIN users ON users.cohort_id = learning_objectives.cohort_id WHERE users.cohort_id=1"
-  ),
-];
-
-console.log(check);
