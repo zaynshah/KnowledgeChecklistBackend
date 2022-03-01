@@ -20,6 +20,7 @@ app
   .get("/:user_id/LOs", getLOs)
   .get("/cohorts/:cohort_id/LOs", getCohortLOs)
   .get("/cohorts", getCohorts)
+  .get("/:user_id/topics", getTopicsOnly)
   .post("/postLO", postLO)
   .get("/students/:cohort_id/results", getStudents)
   .get("/student/:user_id/data", getStudentData)
@@ -44,7 +45,7 @@ async function getLOs(server) {
     FROM results
     WHERE user_id = ?
   `;
-  const LOs = [...(await db.query(query, [user_id]))];
+  const LOs = [...(await db.query(query, [user_id]).asObjects())];
 
   if (LOs.length !== 0) {
     return server.json(LOs, 200);
@@ -102,6 +103,24 @@ async function getCohorts(server) {
   `;
   const cohorts = [...(await db.query(query).asObjects())];
   return server.json(cohorts, 200);
+}
+
+async function getTopicsOnly(server) {
+  const { user_id } = await server.params;
+  const query = `
+    SELECT DISTINCT topic
+    FROM results
+    WHERE user_id = ?
+  `;
+
+  const cohortTopics = [...(await db.query(query, [user_id]).asObjects())];
+
+  console.log(cohortTopics);
+  if (cohortTopics) {
+    return server.json(cohortTopics, 200);
+  } else {
+    return server.json({ error: "Topic list does not exist." }, 400);
+  }
 }
 
 async function postLO(server) {
@@ -179,15 +198,13 @@ async function postLogin(server) {
 }
 
 async function postScore(server) {
-  const { userID, LO, score } = await server.body;
+  const { userID, LO, score, isActive } = await server.body;
 
-  console.log(userID);
-  console.log(LO);
-  console.log(score);
+  console.log(isActive);
 
   db.query(
-    `UPDATE results SET score = ? WHERE user_id = ? AND learning_objective = ?`,
-    [score, userID, LO]
+    `UPDATE results SET score = ?, isActive = ? WHERE user_id = ? AND learning_objective = ?`,
+    [score, isActive, userID, LO]
   );
 
   const LOs = [
@@ -195,8 +212,6 @@ async function postScore(server) {
       .query("SELECT * FROM results WHERE user_id = ?", [userID])
       .asObjects(),
   ];
-
-  console.log(LOs);
 
   return server.json({ LOs: LOs }, 200);
 }
@@ -217,11 +232,4 @@ async function makeSession(userID, e, server, isAdmin) {
   server.setCookie({ name: "userID", value: userID, expires: expiryDate });
   server.setCookie({ name: "email", value: e, expires: expiryDate });
   server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate });
-}
-
-function validateEmail(email) {
-  if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
-    return true;
-  }
-  return false;
 }
