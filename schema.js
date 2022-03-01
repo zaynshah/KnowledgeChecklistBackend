@@ -46,6 +46,7 @@ await db.query(
     cohort_id INTEGER NOT NULL,
     topic TEXT NOT NULL,
     learning_objective TEXT NOT NULL,
-    score INTEGER DEFAULT 1
+    score INTEGER DEFAULT 1,
+    isActive BOOLEAN DEFAULT FALSE
     )`
 );

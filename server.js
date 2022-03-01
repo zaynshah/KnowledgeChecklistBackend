@@ -14,6 +14,7 @@ app
   .get("/:user_id/LOs", getLOs)
   .get("/cohorts/:cohort_id/LOs", getCohortLOs)
   .get("/cohorts", getCohorts)
+  .get("/:user_id/topics", getTopicsOnly)
   .post("/postLO", postLO)
   .get("/students/:cohort_id/results", getStudents)
   .get("/student/:user_id/data", getStudentData)
@@ -41,7 +42,9 @@ async function getLOs(server) {
     WHERE user_id = ?
   `;
 
+
   const LOs = [...(await db.query(query, [user_id])).asObjects()];
+
 
   if (LOs.length !== 0) {
     return server.json(LOs, 200);
@@ -93,6 +96,24 @@ async function getCohorts(server) {
   `;
   const cohorts = [...(await db.query(query).asObjects())];
   return server.json(cohorts, 200);
+}
+
+async function getTopicsOnly(server) {
+  const { user_id } = await server.params;
+  const query = `
+    SELECT DISTINCT topic
+    FROM results
+    WHERE user_id = ?
+  `;
+
+  const cohortTopics = [...(await db.query(query, [user_id]).asObjects())];
+
+  console.log(cohortTopics);
+  if (cohortTopics) {
+    return server.json(cohortTopics, 200);
+  } else {
+    return server.json({ error: "Topic list does not exist." }, 400);
+  }
 }
 
 async function postLO(server) {
@@ -192,13 +213,18 @@ async function postLogin(server) {
 }
 
 async function postScore(server) {
-  const { userID, LO, score } = await server.body;
+  const { userID, LO, score, isActive } = await server.body;
 
-  db.query(`UPDATE results SET score = ? WHERE user_id = ? AND learning_objective = ?`, [score, userID, LO]);
+
+  console.log(isActive);
+
+  db.query(
+    `UPDATE results SET score = ?, isActive = ? WHERE user_id = ? AND learning_objective = ?`,
+    [score, isActive, userID, LO]
+  );
+
 
   const LOs = [...db.query("SELECT * FROM results WHERE user_id = ?", [userID]).asObjects()];
-
-  console.log(LOs);
 
   return server.json({ LOs: LOs }, 200);
 }
@@ -232,3 +258,4 @@ async function deleteLOs(server) {
   await db.query(query2, [learning_objective, cohort_id]);
   server.json({ success: true }, 200);
 }
+
