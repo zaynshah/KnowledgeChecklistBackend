@@ -26,6 +26,7 @@ app
   .post("/users", postSignup)
   .post("/sessions", postLogin)
   .post("/:user_id/LOs", postScore)
+  .post("/postCohort", postCohort)
   .delete("/deleteLOs", deleteLOs)
   .start({ port: PORT });
 console.log(`Server running on http://localhost:${PORT}`);
@@ -63,11 +64,7 @@ async function getStudents(server) {
     WHERE cohort_id = ?
   `;
   const LOs = [...(await db.query(query, [cohort_id]).asObjects())];
-  // if (LOs.length !== 0) {
   return server.json(LOs, 200);
-  // } else {
-  //   return server.json({ error: "Student does not exist" }, 400);
-  // }
 }
 
 async function getStudentData(server) {
@@ -79,11 +76,7 @@ async function getStudentData(server) {
   ORDER BY topic ASC
   `;
   const LOs = [...(await db.query(query, [user_id]).asObjects())];
-  // if (LOs.length !== 0) {
   return server.json(LOs, 200);
-  // } else {
-  //   return server.json({ error: "Student does not exist" }, 400);
-  // }
 }
 
 async function getCohortLOs(server) {
@@ -102,6 +95,7 @@ async function getCohorts(server) {
   const query = `
     SELECT DISTINCT cohort_id 
     FROM learning_objectives
+    ORDER BY cohort_id ASC
   `;
   const cohorts = [...(await db.query(query).asObjects())];
   return server.json(cohorts, 200);
@@ -128,6 +122,38 @@ async function postLO(server) {
       [topic, learning_objective]
     )
   );
+}
+
+async function postCohort(server) {
+  const { cohort_id } = await server.body;
+  const data = [
+    ["HTML/CSS", "Understand what parent and child is"],
+    ["HTML/CSS", "Can create and link a stylesheet"],
+    ["Javascript", "Be able to link a Javascript file in your project"],
+    ["Javascript", "Be able to do a console.log()"],
+    [
+      "React",
+      "Understand the difference between class and functional components",
+    ],
+    ["React", "Be able to create a React application with create-react-app"],
+  ];
+  data.forEach((item) => {
+    db.query(
+      `
+      INSERT INTO learning_objectives (cohort_id, topic, learning_objective)
+      VALUES (?, '${item[0]}', '${item[1]}')
+    `,
+      [cohort_id]
+    );
+  });
+  return server.json({ success: true }, 200);
+}
+
+function validateEmail(email) {
+  if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+    return true;
+  }
+  return false;
 }
 
 async function postSignup(server) {
@@ -191,9 +217,16 @@ async function postLogin(server) {
 async function postScore(server) {
   const { userID, LO, score } = await server.body;
 
-  db.query(`UPDATE results SET score = ? WHERE user_id = ? AND learning_objective = ?`, [score, userID, LO]);
+  db.query(
+    `UPDATE results SET score = ? WHERE user_id = ? AND learning_objective = ?`,
+    [score, userID, LO]
+  );
 
-  const LOs = [...db.query("SELECT * FROM results WHERE user_id = ?", [userID]).asObjects()];
+  const LOs = [
+    ...db
+      .query("SELECT * FROM results WHERE user_id = ?", [userID])
+      .asObjects(),
+  ];
 
   console.log(LOs);
 
