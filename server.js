@@ -15,6 +15,7 @@ app
   .get("/cohorts/:cohort_id/LOs", getCohortLOs)
   .get("/cohorts", getCohorts)
   .get("/:user_id/topics", getTopicsOnly)
+  .get("/cohort/:cohort_id/cohortTopics", getTopicsOnlyPerCohort)
   .post("/postLO", postLO)
   .get("/students/:cohort_id/results", getStudents)
   .get("/student/:user_id/data", getStudentData)
@@ -42,9 +43,7 @@ async function getLOs(server) {
     WHERE user_id = ?
   `;
 
-
   const LOs = [...(await db.query(query, [user_id])).asObjects()];
-
 
   if (LOs.length !== 0) {
     return server.json(LOs, 200);
@@ -108,6 +107,23 @@ async function getTopicsOnly(server) {
 
   const cohortTopics = [...(await db.query(query, [user_id]).asObjects())];
 
+  console.log(cohortTopics);
+  if (cohortTopics) {
+    return server.json(cohortTopics, 200);
+  } else {
+    return server.json({ error: "Topic list does not exist." }, 400);
+  }
+}
+
+async function getTopicsOnlyPerCohort(server) {
+  const { cohort_id } = await server.params;
+  const query = `
+    SELECT DISTINCT topic
+    FROM learning_objectives
+    WHERE cohort_id = ?
+    
+  `;
+  const cohortTopics = [...(await db.query(query, [cohort_id]).asObjects())];
   console.log(cohortTopics);
   if (cohortTopics) {
     return server.json(cohortTopics, 200);
@@ -215,14 +231,9 @@ async function postLogin(server) {
 async function postScore(server) {
   const { userID, LO, score, isActive } = await server.body;
 
-
   console.log(isActive);
 
-  db.query(
-    `UPDATE results SET score = ?, isActive = ? WHERE user_id = ? AND learning_objective = ?`,
-    [score, isActive, userID, LO]
-  );
-
+  db.query(`UPDATE results SET score = ?, isActive = ? WHERE user_id = ? AND learning_objective = ?`, [score, isActive, userID, LO]);
 
   const LOs = [...db.query("SELECT * FROM results WHERE user_id = ?", [userID]).asObjects()];
 
@@ -258,4 +269,3 @@ async function deleteLOs(server) {
   await db.query(query2, [learning_objective, cohort_id]);
   server.json({ success: true }, 200);
 }
-
