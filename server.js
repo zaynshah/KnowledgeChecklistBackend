@@ -26,6 +26,7 @@ app
   .post("/users", postSignup)
   .post("/sessions", postLogin)
   .post("/:user_id/LOs", postScore)
+  .delete("/deleteLOs", deleteLOs)
   .start({ port: PORT });
 console.log(`Server running on http://localhost:${PORT}`);
 
@@ -44,7 +45,8 @@ async function getLOs(server) {
     FROM results
     WHERE user_id = ?
   `;
-  const LOs = [...(await db.query(query, [user_id]).asObjects())];
+
+  const LOs = [...(await db.query(query, [user_id])).asObjects()];
 
   if (LOs.length !== 0) {
     return server.json(LOs, 200);
@@ -115,7 +117,8 @@ async function postLO(server) {
 
   const check = [
     ...db.query(
-      "SELECT DISTINCT(users.email), users.cohort_id, users.id FROM learning_objectives JOIN users ON users.cohort_id = learning_objectives.cohort_id WHERE users.cohort_id=1"
+      "SELECT DISTINCT(users.email), users.cohort_id, users.id FROM learning_objectives JOIN users ON users.cohort_id = learning_objectives.cohort_id WHERE users.cohort_id=?",
+      [cohort_id]
     ),
   ];
 
@@ -188,20 +191,9 @@ async function postLogin(server) {
 async function postScore(server) {
   const { userID, LO, score } = await server.body;
 
-  console.log(userID);
-  console.log(LO);
-  console.log(score);
+  db.query(`UPDATE results SET score = ? WHERE user_id = ? AND learning_objective = ?`, [score, userID, LO]);
 
-  db.query(
-    `UPDATE results SET score = ? WHERE user_id = ? AND learning_objective = ?`,
-    [score, userID, LO]
-  );
-
-  const LOs = [
-    ...db
-      .query("SELECT * FROM results WHERE user_id = ?", [userID])
-      .asObjects(),
-  ];
+  const LOs = [...db.query("SELECT * FROM results WHERE user_id = ?", [userID]).asObjects()];
 
   console.log(LOs);
 
@@ -226,9 +218,12 @@ async function makeSession(userID, e, server, isAdmin) {
   server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate });
 }
 
-function validateEmail(email) {
-  if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
-    return true;
-  }
-  return false;
+async function deleteLOs(server) {
+  const { learning_objective } = await server.body;
+  const query = `DELETE FROM learning_objectives WHERE learning_objective = ?`;
+  const query2 = `DELETE FROM results WHERE learning_objective = ?`;
+
+  await db.query(query, [learning_objective]);
+  await db.query(query2, [learning_objective]);
+  server.json({ success: true }, 200);
 }
