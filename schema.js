@@ -13,7 +13,9 @@ await db.query(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     cohort_id INTEGER NOT NULL,
     topic TEXT NOT NULL,
-    learning_objective TEXT NOT NULL
+    learning_objective TEXT NOT NULL,
+    not_confident TEXT DEFAULT '.',
+    confident TEXT DEFAULT '.'
   )`);
 
 await db.query(
@@ -47,6 +49,8 @@ await db.query(
     topic TEXT NOT NULL,
     learning_objective TEXT NOT NULL,
     score INTEGER DEFAULT 1,
-    isActive BOOLEAN DEFAULT FALSE
+    isActive BOOLEAN DEFAULT FALSE,
+    not_confident TEXT NOT NULL,
+    confident TEXT NOT NULL
     )`
 );
