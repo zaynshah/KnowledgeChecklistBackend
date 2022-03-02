@@ -107,7 +107,6 @@ async function getTopicsOnly(server) {
 
   const cohortTopics = [...(await db.query(query, [user_id]).asObjects())];
 
-  console.log(cohortTopics);
   if (cohortTopics) {
     return server.json(cohortTopics, 200);
   } else {
@@ -124,7 +123,7 @@ async function getTopicsOnlyPerCohort(server) {
     
   `;
   const cohortTopics = [...(await db.query(query, [cohort_id]).asObjects())];
-  console.log(cohortTopics);
+
   if (cohortTopics) {
     return server.json(cohortTopics, 200);
   } else {
@@ -232,8 +231,6 @@ async function postLogin(server) {
 
 async function postScore(server) {
   const { userID, LO, score, isActive } = await server.body;
-
-  console.log(isActive);
 
   db.query(`UPDATE results SET score = ?, isActive = ? WHERE user_id = ? AND learning_objective = ?`, [score, isActive, userID, LO]);
 
