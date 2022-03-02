@@ -1,11 +1,12 @@
 import { Application } from "https://deno.land/x/abc@v1.3.3/mod.ts";
-import { DB } from "https://deno.land/x/sqlite@v2.5.0/mod.ts";
 import { abcCors } from "https://deno.land/x/cors/mod.ts";
 import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
+import { Client } from "https://deno.land/x/postgres@v0.11.3/mod.ts";
 
 const app = new Application();
-const db = new DB("./knowledge_checklist.db");
+const client = new Client("postgres://localhost:5432/knowledge_checklist");
+await client.connect();
 const PORT = 8080;
 const allowedHeaders = [
   "Authorization",
@@ -21,7 +22,6 @@ app
   .get("/cohorts/:cohort_id/LOs", getCohortLOs)
   .get("/cohorts", getCohorts)
   .get("/:user_id/topics", getTopicsOnly)
-  .get("/cohort/:cohort_id/cohortTopics", getTopicsOnlyPerCohort)
   .post("/postLO", postLO)
   .get("/students/:cohort_id/results", getStudents)
   .get("/student/:user_id/data", getStudentData)
@@ -46,12 +46,9 @@ async function getLOs(server) {
   const query = `
     SELECT *
     FROM results
-    WHERE user_id = ?
-    ORDER BY topic ASC
+    WHERE user_id = $1
   `;
-
-  const LOs = [...(await db.query(query, [user_id]).asObjects())];
-
+  const LOs = (await client.queryObject({ text: query, args: [user_id] })).rows;
   if (LOs.length !== 0) {
     return server.json(LOs, 200);
   } else {
@@ -64,9 +61,11 @@ async function getStudents(server) {
   const query = `
     SELECT DISTINCT email, user_id
     FROM results
-    WHERE cohort_id = ?
+    WHERE cohort_id = $1
   `;
-  const LOs = [...(await db.query(query, [cohort_id]).asObjects())];
+  const LOs = (await client.queryObject({ text: query, args: [cohort_id] }))
+    .rows;
+
   return server.json(LOs, 200);
 }
 
@@ -75,10 +74,10 @@ async function getStudentData(server) {
   const query = `
   SELECT *
   FROM results
-  WHERE user_id = ?
+  WHERE user_id = $1
   ORDER BY topic ASC
   `;
-  const LOs = [...(await db.query(query, [user_id]).asObjects())];
+  const LOs = (await client.queryObject({ text: query, args: [user_id] })).rows;
   return server.json(LOs, 200);
 }
 
@@ -87,10 +86,12 @@ async function getCohortLOs(server) {
   const query = `
     SELECT *
     FROM learning_objectives
-    WHERE cohort_id = ?
+    WHERE cohort_id = $1
     ORDER BY topic ASC
   `;
-  const cohortLOs = [...(await db.query(query, [cohort_id]).asObjects())];
+  const cohortLOs = (
+    await client.queryObject({ text: query, args: [cohort_id] })
+  ).rows;
   return server.json(cohortLOs);
 }
 
@@ -100,7 +101,7 @@ async function getCohorts(server) {
     FROM learning_objectives
     ORDER BY cohort_id ASC
   `;
-  const cohorts = [...(await db.query(query).asObjects())];
+  const cohorts = (await client.queryObject(query)).rows;
   return server.json(cohorts, 200);
 }
 
@@ -109,30 +110,11 @@ async function getTopicsOnly(server) {
   const query = `
     SELECT DISTINCT topic
     FROM results
-    WHERE user_id = ?
-    ORDER BY topic ASC
+    WHERE user_id = $1
   `;
-
-  const cohortTopics = [...(await db.query(query, [user_id]).asObjects())];
-
-  console.log(cohortTopics);
-  if (cohortTopics) {
-    return server.json(cohortTopics, 200);
-  } else {
-    return server.json({ error: "Topic list does not exist." }, 400);
-  }
-}
-
-async function getTopicsOnlyPerCohort(server) {
-  const { cohort_id } = await server.params;
-  const query = `
-    SELECT DISTINCT topic
-    FROM learning_objectives
-    WHERE cohort_id = ?
-    
-  `;
-  const cohortTopics = [...(await db.query(query, [cohort_id]).asObjects())];
-  console.log(cohortTopics);
+  const cohortTopics = (
+    await client.queryObject({ text: query, args: [user_id] })
+  ).rows;
   if (cohortTopics) {
     return server.json(cohortTopics, 200);
   } else {
@@ -144,22 +126,34 @@ async function postLO(server) {
   const { cohort_id, topic, learning_objective } = await server.body;
   const query = `
     INSERT INTO learning_objectives(cohort_id, topic, learning_objective)
-    VALUES (?, ?, ?)
+    VALUES ($1, $2, $3)
   `;
-  db.query(query, [cohort_id, topic, learning_objective]);
 
-  const check = [
-    ...db.query(
-      "SELECT DISTINCT(users.email), users.cohort_id, users.id FROM learning_objectives JOIN users ON users.cohort_id = learning_objectives.cohort_id WHERE users.cohort_id=?",
-      [cohort_id]
-    ),
-  ];
+  await client.queryObject({
+    text: query,
+    args: [cohort_id, topic, learning_objective],
+  }).rows;
 
-  check.forEach((i) =>
-    db.query(
-      `INSERT INTO results (user_id,email,cohort_id,topic,learning_objective) VALUES ('${i[2]}','${i[0]}','${i[1]}',?,?)`,
-      [topic, learning_objective]
-    )
+  const check = (
+    await client.queryObject({
+      text: `
+        SELECT DISTINCT(users.email), users.cohort_id, users.id 
+        FROM learning_objectives JOIN users ON users.cohort_id = learning_objectives.cohort_id 
+        WHERE users.cohort_id = $1
+      `,
+      args: [cohort_id],
+    })
+  ).rows;
+
+  check.forEach(
+    (i) =>
+      client.queryObject({
+        text: `
+            INSERT INTO results (user_id, email, cohort_id, topic, learning_objective)
+            VALUES ('${i[2]}', '${i[0]}', '${i[1]}', $1, $2)
+          `,
+        args: [topic, learning_objective],
+      }).rows
   );
 }
 
@@ -176,15 +170,17 @@ async function postCohort(server) {
     ],
     ["React", "Be able to create a React application with create-react-app"],
   ];
+
   data.forEach((item) => {
-    db.query(
-      `
+    client.queryObject({
+      text: `
       INSERT INTO learning_objectives (cohort_id, topic, learning_objective)
-      VALUES (?, '${item[0]}', '${item[1]}')
+      VALUES ($1, '${item[0]}', '${item[1]}')
     `,
-      [cohort_id]
-    );
+      args: [cohort_id],
+    }).rows;
   });
+
   return server.json({ success: true }, 200);
 }
 
