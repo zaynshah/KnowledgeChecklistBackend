@@ -133,12 +133,12 @@ async function getTopicsOnlyPerCohort(server) {
 }
 
 async function postLO(server) {
-  const { cohort_id, topic, learning_objective } = await server.body;
+  const { cohort_id, topic, learning_objective, notConfident, confident } = await server.body;
   const query = `
-    INSERT INTO learning_objectives(cohort_id, topic, learning_objective)
-    VALUES (?, ?, ?)
+    INSERT INTO learning_objectives(cohort_id, topic, learning_objective,not_confident,confident)
+    VALUES (?, ?, ?, ? , ?)
   `;
-  db.query(query, [cohort_id, topic, learning_objective]);
+  db.query(query, [cohort_id, topic, learning_objective, notConfident, confident]);
 
   const check = [
     ...db.query(
@@ -148,10 +148,10 @@ async function postLO(server) {
   ];
 
   check.forEach((i) =>
-    db.query(`INSERT INTO results (user_id,email,cohort_id,topic,learning_objective) VALUES ('${i[2]}','${i[0]}','${i[1]}',?,?)`, [
-      topic,
-      learning_objective,
-    ])
+    db.query(
+      `INSERT INTO results (user_id,email,cohort_id,topic,learning_objective, not_confident, confident) VALUES ('${i[2]}','${i[0]}','${i[1]}',?,?,?,?)`,
+      [topic, learning_objective, notConfident, confident]
+    )
   );
 }
 
@@ -206,12 +206,14 @@ async function postSignup(server) {
 
   const check = [
     ...db.query(
-      "SELECT users.id, users.email,users.cohort_id,learning_objectives.topic,learning_objectives.learning_objective FROM learning_objectives JOIN users ON users.cohort_id = learning_objectives.cohort_id WHERE users.email =?",
+      "SELECT users.id, users.email,users.cohort_id,learning_objectives.topic,learning_objectives.learning_objective, learning_objectives.not_confident, learning_objectives.confident  FROM learning_objectives JOIN users ON users.cohort_id = learning_objectives.cohort_id WHERE users.email =?",
       [email]
     ),
   ];
   check.forEach((i) =>
-    db.query(`INSERT INTO results (user_id,email,cohort_id,topic,learning_objective) VALUES ('${i[0]}','${i[1]}','${i[2]}','${i[3]}','${i[4]}')`)
+    db.query(
+      `INSERT INTO results (user_id,email,cohort_id,topic,learning_objective,not_confident,confident) VALUES ('${i[0]}','${i[1]}','${i[2]}','${i[3]}','${i[4]}','${i[5]}','${i[6]}')`
+    )
   );
 
   server.json({ success: true }, 200);
