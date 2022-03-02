@@ -7,7 +7,13 @@ import { v4 } from "https://deno.land/std/uuid/mod.ts";
 const app = new Application();
 const db = new DB("./knowledge_checklist.db");
 const PORT = 8080;
-const allowedHeaders = ["Authorization", "Content-Type", "Accept", "Origin", "User-Agent"];
+const allowedHeaders = [
+  "Authorization",
+  "Content-Type",
+  "Accept",
+  "Origin",
+  "User-Agent",
+];
 
 app
   .use(allowCors())
@@ -41,9 +47,10 @@ async function getLOs(server) {
     SELECT *
     FROM results
     WHERE user_id = ?
+    ORDER BY topic ASC
   `;
 
-  const LOs = [...(await db.query(query, [user_id])).asObjects()];
+  const LOs = [...(await db.query(query, [user_id]).asObjects())];
 
   if (LOs.length !== 0) {
     return server.json(LOs, 200);
@@ -103,6 +110,7 @@ async function getTopicsOnly(server) {
     SELECT DISTINCT topic
     FROM results
     WHERE user_id = ?
+    ORDER BY topic ASC
   `;
 
   const cohortTopics = [...(await db.query(query, [user_id]).asObjects())];
@@ -148,10 +156,10 @@ async function postLO(server) {
   ];
 
   check.forEach((i) =>
-    db.query(`INSERT INTO results (user_id,email,cohort_id,topic,learning_objective) VALUES ('${i[2]}','${i[0]}','${i[1]}',?,?)`, [
-      topic,
-      learning_objective,
-    ])
+    db.query(
+      `INSERT INTO results (user_id,email,cohort_id,topic,learning_objective) VALUES ('${i[2]}','${i[0]}','${i[1]}',?,?)`,
+      [topic, learning_objective]
+    )
   );
 }
 
@@ -162,7 +170,10 @@ async function postCohort(server) {
     ["HTML/CSS", "Can create and link a stylesheet"],
     ["Javascript", "Be able to link a Javascript file in your project"],
     ["Javascript", "Be able to do a console.log()"],
-    ["React", "Understand the difference between class and functional components"],
+    [
+      "React",
+      "Understand the difference between class and functional components",
+    ],
     ["React", "Be able to create a React application with create-react-app"],
   ];
   data.forEach((item) => {
@@ -193,7 +204,9 @@ async function postSignup(server) {
     return server.json({ error: "Enter valid email" }, 400);
   }
 
-  const checkRepeatEmails = [...db.query("SELECT COUNT(*) FROM users WHERE email = ?", [email])];
+  const checkRepeatEmails = [
+    ...db.query("SELECT COUNT(*) FROM users WHERE email = ?", [email]),
+  ];
 
   if (checkRepeatEmails[0][0]) {
     return server.json({ error: "Email already in use" }, 400);
@@ -211,7 +224,9 @@ async function postSignup(server) {
     ),
   ];
   check.forEach((i) =>
-    db.query(`INSERT INTO results (user_id,email,cohort_id,topic,learning_objective) VALUES ('${i[0]}','${i[1]}','${i[2]}','${i[3]}','${i[4]}')`)
+    db.query(
+      `INSERT INTO results (user_id,email,cohort_id,topic,learning_objective) VALUES ('${i[0]}','${i[1]}','${i[2]}','${i[3]}','${i[4]}')`
+    )
   );
 
   server.json({ success: true }, 200);
@@ -219,9 +234,19 @@ async function postSignup(server) {
 
 async function postLogin(server) {
   const { email, password } = await server.body;
-  const authenticated = [...db.query("SELECT * FROM users WHERE email = ?", [email]).asObjects()];
-  if (authenticated.length && (await bcrypt.compare(password, authenticated[0].encrypted_password))) {
-    makeSession(authenticated[0].id, authenticated[0].email, server, authenticated[0].admin);
+  const authenticated = [
+    ...db.query("SELECT * FROM users WHERE email = ?", [email]).asObjects(),
+  ];
+  if (
+    authenticated.length &&
+    (await bcrypt.compare(password, authenticated[0].encrypted_password))
+  ) {
+    makeSession(
+      authenticated[0].id,
+      authenticated[0].email,
+      server,
+      authenticated[0].admin
+    );
     server.json({ success: true });
   } else {
     server.json({ success: false });
@@ -233,21 +258,26 @@ async function postScore(server) {
 
   console.log(isActive);
 
-  db.query(`UPDATE results SET score = ?, isActive = ? WHERE user_id = ? AND learning_objective = ?`, [score, isActive, userID, LO]);
+  db.query(
+    `UPDATE results SET score = ?, isActive = ? WHERE user_id = ? AND learning_objective = ?`,
+    [score, isActive, userID, LO]
+  );
 
-  const LOs = [...db.query("SELECT * FROM results WHERE user_id = ?", [userID]).asObjects()];
+  const LOs = [
+    ...db
+      .query("SELECT * FROM results WHERE user_id = ?", [userID])
+      .asObjects(),
+  ];
 
   return server.json({ LOs: LOs }, 200);
 }
 
 async function makeSession(userID, e, server, isAdmin) {
   const sessionID = v4.generate();
-  await db.query(`INSERT INTO sessions (id, user_id, email, created_at, isAdmin) VALUES (?, ?, ?, datetime('now'), ?)`, [
-    sessionID,
-    userID,
-    e,
-    isAdmin,
-  ]);
+  await db.query(
+    `INSERT INTO sessions (id, user_id, email, created_at, isAdmin) VALUES (?, ?, ?, datetime('now'), ?)`,
+    [sessionID, userID, e, isAdmin]
+  );
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 1);
   server.setCookie({
