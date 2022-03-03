@@ -1,10 +1,12 @@
 import { Application } from "https://deno.land/x/abc@v1.3.3/mod.ts";
+import { DB } from "https://deno.land/x/sqlite@v2.5.0/mod.ts";
 import { abcCors } from "https://deno.land/x/cors/mod.ts";
 import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 import { Client } from "https://deno.land/x/postgres@v0.11.3/mod.ts";
 
 const app = new Application();
+const db = new DB("./knowledge_checklist.db");
 const client = new Client("postgres://localhost:5432/knowledge_checklist");
 await client.connect();
 const PORT = 8080;
@@ -22,6 +24,7 @@ app
   .get("/cohorts/:cohort_id/LOs", getCohortLOs)
   .get("/cohorts", getCohorts)
   .get("/:user_id/topics", getTopicsOnly)
+  .get("/cohort/:cohort_id/cohortTopics", getTopicsOnlyPerCohort)
   .post("/postLO", postLO)
   .get("/students/:cohort_id/results", getStudents)
   .get("/student/:user_id/data", getStudentData)
@@ -114,6 +117,23 @@ async function getTopicsOnly(server) {
   `;
   const cohortTopics = (
     await client.queryObject({ text: query, args: [user_id] })
+  ).rows;
+  if (cohortTopics) {
+    return server.json(cohortTopics, 200);
+  } else {
+    return server.json({ error: "Topic list does not exist." }, 400);
+  }
+}
+
+async function getTopicsOnlyPerCohort(server) {
+  const { cohort_id } = await server.params;
+  const query = `
+    SELECT DISTINCT topic
+    FROM learning_objectives
+    WHERE cohort_id = $1
+  `;
+  const cohortTopics = (
+    await client.queryObject({ text: query, args: [cohort_id] })
   ).rows;
   if (cohortTopics) {
     return server.json(cohortTopics, 200);
