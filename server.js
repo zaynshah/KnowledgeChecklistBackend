@@ -142,8 +142,6 @@ async function checkValidUrl(url) {
 
 async function postLO(server) {
   const { cohort_id, topic, learning_objective, notConfident, confident } = await server.body;
-  console.log(confident);
-  console.log(notConfident);
   if (confident.length > 0) {
     if (!(await checkValidUrl(confident))) {
       return server.json({ error: "Invalid URL" }, 400);
