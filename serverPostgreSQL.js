@@ -1,14 +1,15 @@
 import { Application } from "https://deno.land/x/abc@v1.3.3/mod.ts";
-import { DB } from "https://deno.land/x/sqlite@v2.5.0/mod.ts";
+import { DB } from "https://deno.land/x/sqlite/mod.ts";
 import { abcCors } from "https://deno.land/x/cors/mod.ts";
 import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 import { Client } from "https://deno.land/x/postgres@v0.11.3/mod.ts";
-
 import { config } from "https://deno.land/x/dotenv/mod.ts";
+
 const DENO_ENV = Deno.env.get("DENO_ENV") ?? "development";
 config({ path: `./.env.${DENO_ENV}`, export: true });
 
+const PORT = Deno.env.get("PORT") || 80;
 const app = new Application();
 const db = new DB("./knowledge_checklist.db");
 const client = new Client(Deno.env.get("PG_URL"));
