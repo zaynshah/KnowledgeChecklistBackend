@@ -5,11 +5,14 @@ import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 import { Client } from "https://deno.land/x/postgres@v0.11.3/mod.ts";
 
+import { config } from "https://deno.land/x/dotenv/mod.ts";
+const DENO_ENV = Deno.env.get("DENO_ENV") ?? "development";
+config({ path: `./.env.${DENO_ENV}`, export: true });
+
 const app = new Application();
 const db = new DB("./knowledge_checklist.db");
-const client = new Client("postgres://localhost:5432/knowledge_checklist");
+const client = new Client(PG_URL);
 await client.connect();
-const PORT = 8080;
 const allowedHeaders = [
   "Authorization",
   "Content-Type",
