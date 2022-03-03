@@ -131,8 +131,26 @@ async function getTopicsOnlyPerCohort(server) {
   }
 }
 
+async function checkValidUrl(url) {
+  try {
+    await fetch(url);
+  } catch (error) {
+    return false;
+  }
+  return true;
+}
+
 async function postLO(server) {
   const { cohort_id, topic, learning_objective, notConfident, confident } = await server.body;
+  if (confident.length > 0) {
+    if (!(await checkValidUrl(confident))) {
+      return server.json({ error: "Invalid URL" }, 400);
+    }
+    if (!(await checkValidUrl(notConfident))) {
+      return server.json({ error: "Invalid URL" }, 400);
+    }
+  }
+
   const query = `
     INSERT INTO learning_objectives(cohort_id, topic, learning_objective,not_confident,confident)
     VALUES (?, ?, ?, ? , ?)
