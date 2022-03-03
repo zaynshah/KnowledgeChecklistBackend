@@ -16,6 +16,34 @@
 - [User Authentication](#user-authentication)
 
   - [Creating a session ID](#creating-a-session-id)
+    A session is created when a user registers an account and then logs in. The session ID is stored in the browser's cookies, ensuring the user is logged in for the duration of their session:
+
+    ```
+    const sessionID = v4.generate();
+    await db.query(`INSERT INTO sessions (id, user_id, email, created_at, isAdmin) VALUES (?, ?, ?, datetime('now'), ?)`, [
+      sessionID,
+      userID,
+      e,
+      isAdmin,
+    ]);
+    ```
+
+    The cookies are then stored in the browser for 24 hours:
+
+    ```
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 1);
+    server.setCookie({
+      name: "sessionId",
+      value: sessionID,
+      expires: expiryDate,
+    });
+    server.setCookie({ name: "userID", value: userID, expires: expiryDate });
+    server.setCookie({ name: "email", value: e, expires: expiryDate });
+    server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate });
+    }
+    ```
+
   - [Find a current user’s ID](#find-a-current-users-id)
   - [Registering a user](#registering-a-user)
   - [Validating a user log-in](#validating-a-user-log-in)
