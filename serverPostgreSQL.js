@@ -11,7 +11,7 @@ config({ path: `./.env.${DENO_ENV}`, export: true });
 
 const app = new Application();
 const db = new DB("./knowledge_checklist.db");
-const client = new Client(DENO_ENV.PG_URL);
+const client = new Client(Deno.env.get("PG_URL"));
 await client.connect();
 const allowedHeaders = [
   "Authorization",
