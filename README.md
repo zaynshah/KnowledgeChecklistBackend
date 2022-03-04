@@ -119,7 +119,76 @@ If the conditions are satisfied, a session is generated as above.
 
 An image of our database schema and how are tables are connected can be seen below.
 
-<img src='./imgs/Schema-diagram'>
+<img src='./imgs/Schema-diagram.png'>
+
+## Backend functionality
+
+### Retrieving cohorts, learning objectives and student emails
+
+There are a number of endpoints which can be used to retrieve information from the database. For example, the code below fetches the learning objectives for a specific cohort, which can be viewed by the admin.
+
+```
+  const { cohort_id } = await server.params;
+  const query = `
+    SELECT *
+    FROM learning_objectives
+    WHERE cohort_id = ?
+    ORDER BY topic ASC
+  `;
+  const cohortLOs = [...(await db.query(query, [cohort_id]).asObjects())];
+  return server.json(cohortLOs);
+```
+
+### Posting learning objectives and cohorts
+
+A learning objective can be posted for a specific cohort using the following endpoint:
+
+```
+  const { cohort_id, topic, learning_objective, notConfident, confident } = await server.body;
+  if (confident.length > 0) {
+    if (!(await checkValidUrl(confident))) {
+      return server.json({ error: "Invalid URL" }, 400);
+    }
+    if (!(await checkValidUrl(notConfident))) {
+      return server.json({ error: "Invalid URL" }, 400);
+    }
+  }
+```
+
+There is an option to insert a 'confident' and 'not confident' resource. If entered, these resources are checked as valid URLs.
+
+```
+  const query = `
+    INSERT INTO learning_objectives(cohort_id, topic, learning_objective,not_confident,confident)
+    VALUES (?, ?, ?, ? , ?)
+  `;
+  db.query(query, [cohort_id, topic, learning_objective, notConfident, confident]);
+```
+
+Next, the learning objective is inserted into the database using the cohort ID supplied. It will then appear for all students on that cohort.
+
+A cohort can also be added, will will include default learning objectives. The next number up from the previous cohort ID will be added:
+
+```
+  const { cohort_id } = await server.body;
+  const data = [
+    ["HTML/CSS", "Understand what parent and child is"],
+    ["HTML/CSS", "Can create and link a stylesheet"],
+    ["Javascript", "Be able to link a Javascript file in your project"],
+    ["Javascript", "Be able to do a console.log()"],
+    ["React", "Understand the difference between class and functional components"],
+    ["React", "Be able to create a React application with create-react-app"],
+  ];
+  data.forEach((item) => {
+    db.query(
+      `
+      INSERT INTO learning_objectives (cohort_id, topic, learning_objective)
+      VALUES (?, '${item[0]}', '${item[1]}')
+    `,
+      [cohort_id]
+    );
+  });
+```
 
 ## License
 
