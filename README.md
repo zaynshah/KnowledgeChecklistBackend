@@ -48,11 +48,78 @@ The frontend React application requires this backend server to be running to wor
 
 ### Creating a session ID
 
+A session is created when a registered user logs in to the app and is stored in the browser's cookies. This ensures the user remains logged in for the duration of their session.
+A session ID is generated and then inserted into the users database as below.
+
+```
+  const sessionID = v4.generate();
+  await db.query(`INSERT INTO sessions (id, user_id, email, created_at, isAdmin) VALUES (?, ?, ?, datetime('now'), ?)`, [
+    sessionID,
+    userID,
+    e,
+    isAdmin,
+  ]);
+```
+
+The cookies are stored in the browser and are set to expire after 24 hours:
+
+```
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + 1);
+  server.setCookie({
+    name: "sessionId",
+    value: sessionID,
+    expires: expiryDate,
+  });
+  server.setCookie({ name: "userID", value: userID, expires: expiryDate });
+  server.setCookie({ name: "email", value: e, expires: expiryDate });
+  server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate });
+}
+```
+
 ### Registering a user
+
+A user is registered by taking the email, password and cohort ID supplied and then generating a salted password using bcrypt.
+
+```
+  const { email, password, cohort_id } = await server.body;
+  const salt = await bcrypt.genSalt(8);
+  const passwordEncrypted = await bcrypt.hash(password, salt);
+```
+
+To ensure there are no repeat emails, this is checked before allowing a sign up:
+
+```
+  const checkRepeatEmails = [...db.query("SELECT COUNT(*) FROM users WHERE email = ?", [email])];
+
+  if (checkRepeatEmails[0][0]) {
+    return server.json({ error: "Email already in use" }, 400);
+  }
+```
 
 ### Validating a user log-in
 
+To validate a log in, firstly the users database is scanned to see if the user's email exists. The password supplied is then compared against the encrypted password stored in the database.
+
+```
+  const { email, password } = await server.body;
+  const authenticated = [...db.query("SELECT * FROM users WHERE email = ?", [email]).asObjects()];
+  if (authenticated.length && (await bcrypt.compare(password, authenticated[0].encrypted_password))) {
+    makeSession(authenticated[0].id, authenticated[0].email, server, authenticated[0].admin);
+    server.json({ success: true });
+  } else {
+    server.json({ success: false });
+  }
+}
+```
+
+If the conditions are satisfied, a session is generated as above.
+
 ## Database Schema
+
+An image of our database schema and how are tables are connected can be seen below.
+
+<img src='./imgs/Schema-diagram'>
 
 ## License
 
