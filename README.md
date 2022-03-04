@@ -1,4 +1,4 @@
-# KnowledgeChecklistBackend
+# Knowledge Checklist Backend
 
 ## Welcome to Our Project!
 
@@ -196,6 +196,6 @@ The license for this project can be found [here](license.md)
 
 The Developers that worked on this project are:
 
-Project Manager & Engineer: [Fahmidul Haque](https://github.com/FahmidulHaquee)
-System Architect & Engineer: [Oliver-case Green](https://github.com/olliecase-green)
+Project Manager & Engineer: [Fahmidul Haque](https://github.com/FahmidulHaquee)<br/>
+System Architect & Engineer: [Oliver-case Green](https://github.com/olliecase-green)<br/>
 Quality Assurance & Engineer: [Zayn Shah](https://github.com/zaynshah)
