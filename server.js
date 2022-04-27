@@ -16,14 +16,16 @@ app
   .get("/cohorts", getCohorts)
   .get("/:user_id/topics", getTopicsOnly)
   .get("/cohort/:cohort_id/cohortTopics", getTopicsOnlyPerCohort)
-  .post("/postLO", postLO)
   .get("/students/:cohort_id/results", getStudents)
   .get("/student/:user_id/data", getStudentData)
+  // .post("/postLO", postLO)
   .post("/users", postSignup)
   .post("/sessions", postLogin)
   .post("/:user_id/LOs", postScore)
-  .post("/postCohort", postCohort)
-  .delete("/deleteLOs", deleteLOs)
+  // .post("/postCohort", postCohort)
+  .post("/postDark", postDarkMode)
+  .patch("/postNewLO", postEditLO)
+  // .delete("/deleteLOs", deleteLOs)
   .start({ port: PORT });
 console.log(`Server running on http://localhost:${PORT}`);
 
@@ -52,29 +54,6 @@ async function getLOs(server) {
   }
 }
 
-async function getStudents(server) {
-  const { cohort_id } = await server.params;
-  const query = `
-    SELECT DISTINCT email, user_id
-    FROM results
-    WHERE cohort_id = ?
-  `;
-  const LOs = [...(await db.query(query, [cohort_id]).asObjects())];
-  return server.json(LOs, 200);
-}
-
-async function getStudentData(server) {
-  const { user_id } = await server.params;
-  const query = `
-  SELECT *
-  FROM results
-  WHERE user_id = ?
-  ORDER BY topic ASC
-  `;
-  const LOs = [...(await db.query(query, [user_id]).asObjects())];
-  return server.json(LOs, 200);
-}
-
 async function getCohortLOs(server) {
   const { cohort_id } = await server.params;
   const query = `
@@ -83,7 +62,9 @@ async function getCohortLOs(server) {
     WHERE cohort_id = ?
     ORDER BY topic ASC
   `;
+  // comment for my self spread return [] we want in [{}]
   const cohortLOs = [...(await db.query(query, [cohort_id]).asObjects())];
+  console.log(cohortLOs);
   return server.json(cohortLOs);
 }
 
@@ -131,6 +112,29 @@ async function getTopicsOnlyPerCohort(server) {
   }
 }
 
+async function getStudents(server) {
+  const { cohort_id } = await server.params;
+  const query = `
+    SELECT DISTINCT email, user_id
+    FROM results
+    WHERE cohort_id = ?
+  `;
+  const LOs = [...(await db.query(query, [cohort_id]).asObjects())];
+  return server.json(LOs, 200);
+}
+
+async function getStudentData(server) {
+  const { user_id } = await server.params;
+  const query = `
+  SELECT *
+  FROM results
+  WHERE user_id = ?
+  ORDER BY topic ASC
+  `;
+  const LOs = [...(await db.query(query, [user_id]).asObjects())];
+  return server.json(LOs, 200);
+}
+
 async function checkValidUrl(url) {
   try {
     await fetch(url);
@@ -150,6 +154,8 @@ async function postLO(server) {
     if (!(await checkValidUrl(confident))) {
       return server.json({ error: "Invalid URL resource" }, 400);
     }
+  }
+  if (notConfident.length > 0) {
     if (!(await checkValidUrl(notConfident))) {
       return server.json({ error: "Invalid URL resource" }, 400);
     }
@@ -178,28 +184,6 @@ async function postLO(server) {
   return server.json({ success: "true" }, 200);
 }
 
-async function postCohort(server) {
-  const { cohort_id } = await server.body;
-  const data = [
-    ["HTML/CSS", "Understand what parent and child is"],
-    ["HTML/CSS", "Can create and link a stylesheet"],
-    ["Javascript", "Be able to link a Javascript file in your project"],
-    ["Javascript", "Be able to do a console.log()"],
-    ["React", "Understand the difference between class and functional components"],
-    ["React", "Be able to create a React application with create-react-app"],
-  ];
-  data.forEach((item) => {
-    db.query(
-      `
-      INSERT INTO learning_objectives (cohort_id, topic, learning_objective)
-      VALUES (?, '${item[0]}', '${item[1]}')
-    `,
-      [cohort_id]
-    );
-  });
-  return server.json({ success: true }, 200);
-}
-
 function validateEmail(email) {
   if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
     return true;
@@ -217,7 +201,7 @@ async function postSignup(server) {
   }
 
   const checkRepeatEmails = [...db.query("SELECT COUNT(*) FROM users WHERE email = ?", [email])];
-
+  console.log(checkRepeatEmails);
   if (checkRepeatEmails[0][0]) {
     return server.json({ error: "Email already in use" }, 400);
   }
@@ -245,6 +229,7 @@ async function postSignup(server) {
 async function postLogin(server) {
   const { email, password } = await server.body;
   const authenticated = [...db.query("SELECT * FROM users WHERE email = ?", [email]).asObjects()];
+  console.log(authenticated);
   if (authenticated.length && (await bcrypt.compare(password, authenticated[0].encrypted_password))) {
     makeSession(authenticated[0].id, authenticated[0].email, server, authenticated[0].admin);
     server.json({ success: true });
@@ -259,8 +244,68 @@ async function postScore(server) {
   db.query(`UPDATE results SET score = ?, isActive = ? WHERE user_id = ? AND learning_objective = ?`, [score, isActive, userID, LO]);
 
   const LOs = [...db.query("SELECT * FROM results WHERE user_id = ?", [userID]).asObjects()];
-
+  console.log(LOs);
   return server.json({ LOs: LOs }, 200);
+}
+
+async function postCohort(server) {
+  const { cohort_id } = await server.body;
+  const data = [
+    ["HTML/CSS", "Understand what parent and child is"],
+    ["HTML/CSS", "Can create and link a stylesheet"],
+    ["Javascript", "Be able to link a Javascript file in your project"],
+    ["Javascript", "Be able to do a console.log()"],
+    ["React", "Understand the difference between class and functional components"],
+    ["React", "Be able to create a React application with create-react-app"],
+  ];
+  data.forEach((item) => {
+    db.query(
+      `
+      INSERT INTO learning_objectives (cohort_id, topic, learning_objective)
+      VALUES (?, '${item[0]}', '${item[1]}')
+    `,
+      [cohort_id]
+    );
+  });
+  return server.json({ success: true }, 200);
+}
+
+async function postDarkMode(server) {
+  const { darkMode, userID } = await server.body;
+  db.query(`UPDATE results SET dark_mode = ? WHERE user_id = ?`, [darkMode, userID]);
+  return server.json({ success: true }, 200);
+}
+
+async function postEditLO(server) {
+  const { newLO, oldLO, newConfident, newNotConfident } = await server.body;
+  if (newLO.length <= 10) {
+    return server.json({ error: "learning objective must be more than 10 characters!" }, 400);
+  }
+
+  if (newConfident.length > 0) {
+    if (!(await checkValidUrl(newConfident))) {
+      return server.json({ error: "Invalid URL resource" }, 400);
+    }
+  }
+  if (newNotConfident.length > 0) {
+    if (!(await checkValidUrl(newNotConfident))) {
+      return server.json({ error: "Invalid URL resource" }, 400);
+    }
+  }
+
+  db.query(`UPDATE learning_objectives SET learning_objective = ?, not_confident = ?, confident = ? WHERE learning_objective = ?`, [
+    newLO,
+    newNotConfident,
+    newConfident,
+    oldLO,
+  ]);
+  db.query(`UPDATE results SET learning_objective = ?, not_confident = ?, confident = ? WHERE learning_objective = ?`, [
+    newLO,
+    newNotConfident,
+    newConfident,
+    oldLO,
+  ]);
+  return server.json({ success: true }, 200);
 }
 
 async function makeSession(userID, e, server, isAdmin) {
@@ -273,6 +318,7 @@ async function makeSession(userID, e, server, isAdmin) {
   ]);
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 1);
+
   server.setCookie({
     name: "sessionId",
     value: sessionID,

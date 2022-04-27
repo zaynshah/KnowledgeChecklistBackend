@@ -8,8 +8,6 @@ import { config } from "https://deno.land/x/dotenv/mod.ts";
 const DENO_ENV = Deno.env.get("DENO_ENV") ?? "development";
 config({ path: `./.env.${DENO_ENV}`, export: true });
 
-const PORT = parseInt(Deno.env.get("PORT")) || 80;
-const PG_URL = Deno.env.get("PG_URL");
 let confige;
 
 // You can use the connection interface to set the connection properties
@@ -18,9 +16,9 @@ confige = {
   user: "postgres",
 };
 
-const client = new Client(PG_URL);
+const client = new Client(confige);
 await client.connect();
-//const PORT = 8080;
+const PORT = 8080;
 const allowedHeaders = ["Authorization", "Content-Type", "Accept", "Origin", "User-Agent"];
 const app = new Application();
 app
@@ -45,6 +43,7 @@ console.log(`Server running on http://localhost:${PORT}`);
 
 function allowCors() {
   return abcCors({
+    origin: ["http://localhost:3000", "http://localhost"],
     headers: allowedHeaders,
     credentials: true,
   });
