@@ -13,7 +13,7 @@ config = {
   user: "postgres",
 };
 
-const client = new Client(config);
+const client = new Client("postgres://iwiyqnnt:Z1YjV6TH1xzQBUsFQo8YR94_ZC01ILsQ@tai.db.elephantsql.com/iwiyqnnt");
 await client.connect();
 await client.queryArray(`
   CREATE TABLE learning_objectives(
