@@ -51,6 +51,7 @@ app
   .post("/postDark", postDarkMode)
   .patch("/postNewLO", postEditLO)
   .delete("/deleteLOs", deleteLOs)
+  .delete("/sessions", logOut)
   .start({ port: PORT });
 console.log(`Server running on http://localhost:${PORT}`);
 
@@ -338,16 +339,18 @@ async function makeSession(userID, e, server, isAdmin) {
     args: [sessionID, userID, e, isAdmin],
   });
 
-  const expiryDate = new Date();
-  expiryDate.setDate(expiryDate.getDate() + 1);
-  server.setCookie({
-    name: "sessionId",
-    value: sessionID,
-    expires: expiryDate,
-  });
-  server.setCookie({ name: "userID", value: userID, expires: expiryDate });
-  server.setCookie({ name: "email", value: e, expires: expiryDate });
-  server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate });
+  // const expiryDate = new Date();
+  // expiryDate.setDate(expiryDate.getDate() + 1);
+  server.setCookie(
+    {
+      name: "sessionId",
+      value: sessionID,
+    },
+    { secure: true, sameSite: "none" }
+  );
+  server.setCookie({ name: "userID", value: userID }, { secure: true, sameSite: "none" });
+  server.setCookie({ name: "email", value: e }, { secure: true, sameSite: "none" });
+  server.setCookie({ name: "isAdmin", value: isAdmin }, { secure: true, sameSite: "none" });
 }
 
 async function deleteLOs(server) {
