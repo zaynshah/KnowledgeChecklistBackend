@@ -22,29 +22,19 @@ await client.connect();
 const corsConfig = abcCors({
   // origin: process.env.REACT_APP_API_URL,
   // origin: "*",
-  sameSite: "None",
   origin: [
     "https://97607209-5461-42ff-b81b-8910b6b17b8c--sigma-knowledge.netlify.app",
     "https://sigma-checklist.netlify.app",
     "http://localhost:3000",
     "http://localhost:3001",
   ],
-  allowedHeaders: [
-    "Authorization",
-    "Content-Type",
-    "Accept",
-    "Origin",
-    "User-Agent",
-    "Access-Control-Allow-Origin",
-    "Access-Control-Allow-Headers",
-    "Access-Control-Allow-Credentials",
-  ],
+  allowedHeaders: ["Authorization", "Content-Type", "Accept", "Origin", "User-Agent"],
   credentials: true,
 });
 
 const app = new Application();
 app
-  .use(abcCors())
+  .use(corsConfig)
   .get("/:user_id/LOs", getLOs)
   .get("/cohorts/:cohort_id/LOs", getCohortLOs)
   .get("/cohorts", getCohorts)
@@ -60,7 +50,6 @@ app
   .post("/postDark", postDarkMode)
   .patch("/postNewLO", postEditLO)
   .delete("/deleteLOs", deleteLOs)
-  .delete("/sessions", logOut)
   .start({ port: PORT });
 console.log(`Server running on http://localhost:${PORT}`);
 
@@ -348,15 +337,16 @@ async function makeSession(userID, e, server, isAdmin) {
     args: [sessionID, userID, e, isAdmin],
   });
 
-  // const expiryDate = new Date();
-  // expiryDate.setDate(expiryDate.getDate() + 1);
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + 1);
   server.setCookie({
     name: "sessionId",
     value: sessionID,
+    expires: expiryDate,
   });
-  server.setCookie({ name: "userID", value: userID });
-  server.setCookie({ name: "email", value: e });
-  server.setCookie({ name: "isAdmin", value: isAdmin });
+  server.setCookie({ name: "userID", value: userID, expires: expiryDate });
+  server.setCookie({ name: "email", value: e, expires: expiryDate });
+  server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate });
 }
 
 async function deleteLOs(server) {
