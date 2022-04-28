@@ -45,7 +45,7 @@ app
   .post("/postDark", postDarkMode)
   .patch("/postNewLO", postEditLO)
   .delete("/deleteLOs", deleteLOs)
-  .start({ port: 80 });
+  .start({ port: PORT });
 console.log(`Server running on http://localhost:${PORT}`);
 
 function allowCors() {
