@@ -19,10 +19,23 @@ confige = {
 const client = new Client("postgres://iwiyqnnt:Z1YjV6TH1xzQBUsFQo8YR94_ZC01ILsQ@tai.db.elephantsql.com/iwiyqnnt");
 await client.connect();
 //const PORT = 8080;
-const allowedHeaders = ["Authorization", "Content-Type", "Accept", "Origin", "User-Agent"];
+const corsConfig = abcCors({
+  sameSite: "None",
+  // origin: process.env.REACT_APP_API_URL,
+  // origin: "*",
+  origin: [
+    "https://626a09bd3636784c4c8e81e8--sigma-knowledge.netlify.app/",
+    "https://sigma-checklist.netlify.app/",
+    "http://localhost:3000",
+    "http://localhost:3001",
+  ],
+  allowedHeaders: ["Authorization", "Content-Type", "Accept", "Origin", "User-Agent"],
+  credentials: true,
+});
+
 const app = new Application();
 app
-  .use(allowCors())
+  .use(corsConfig)
   .get("/:user_id/LOs", getLOs)
   .get("/cohorts/:cohort_id/LOs", getCohortLOs)
   .get("/cohorts", getCohorts)
