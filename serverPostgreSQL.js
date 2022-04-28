@@ -29,7 +29,16 @@ const corsConfig = abcCors({
     "http://localhost:3000",
     "http://localhost:3001",
   ],
-  allowedHeaders: ["Authorization", "Content-Type", "Accept", "Origin", "User-Agent", "Access-Control-Allow-Origin"],
+  allowedHeaders: [
+    "Authorization",
+    "Content-Type",
+    "Accept",
+    "Origin",
+    "User-Agent",
+    "Access-Control-Allow-Origin",
+    "Access-Control-Allow-Headers",
+    "Access-Control-Allow-Credentials",
+  ],
   credentials: true,
 });
 
