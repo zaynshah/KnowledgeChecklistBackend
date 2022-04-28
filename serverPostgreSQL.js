@@ -24,10 +24,11 @@ const corsConfig = abcCors({
   // origin: process.env.REACT_APP_API_URL,
   // origin: "*",
   origin: [
-    "https://626a09bd3636784c4c8e81e8--sigma-knowledge.netlify.app/",
-    "https://sigma-checklist.netlify.app/",
+    "https://626a09bd3636784c4c8e81e8--sigma-knowledge.netlify.app",
+    "https://sigma-checklist.netlify.app",
     "http://localhost:3000",
     "http://localhost:3001",
+    "http://localhost:8080",
   ],
   allowedHeaders: ["Authorization", "Content-Type", "Accept", "Origin", "User-Agent"],
   credentials: true,
