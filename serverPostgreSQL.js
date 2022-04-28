@@ -20,15 +20,13 @@ const client = new Client("postgres://iwiyqnnt:Z1YjV6TH1xzQBUsFQo8YR94_ZC01ILsQ@
 await client.connect();
 //const PORT = 8080;
 const corsConfig = abcCors({
-  sameSite: "None",
   // origin: process.env.REACT_APP_API_URL,
   // origin: "*",
   origin: [
-    "https://626a09bd3636784c4c8e81e8--sigma-knowledge.netlify.app",
+    "https://97607209-5461-42ff-b81b-8910b6b17b8c--sigma-knowledge.netlify.app",
     "https://sigma-checklist.netlify.app",
     "http://localhost:3000",
     "http://localhost:3001",
-    "http://localhost:8080",
   ],
   allowedHeaders: ["Authorization", "Content-Type", "Accept", "Origin", "User-Agent"],
   credentials: true,
@@ -52,7 +50,7 @@ app
   .post("/postDark", postDarkMode)
   .patch("/postNewLO", postEditLO)
   .delete("/deleteLOs", deleteLOs)
-  .start({ port: PORT });
+  .start({ port: 80 });
 console.log(`Server running on http://localhost:${PORT}`);
 
 function allowCors() {
