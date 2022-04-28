@@ -337,16 +337,16 @@ async function makeSession(userID, e, server, isAdmin) {
     args: [sessionID, userID, e, isAdmin],
   });
 
-  const expiryDate = new Date();
-  expiryDate.setDate(expiryDate.getDate() + 1);
+  // const expiryDate = new Date();
+  // expiryDate.setDate(expiryDate.getDate() + 1);
   server.setCookie({
     name: "sessionId",
     value: sessionID,
     expires: expiryDate,
   });
-  server.setCookie({ name: "userID", value: userID, expires: expiryDate });
-  server.setCookie({ name: "email", value: e, expires: expiryDate });
-  server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate });
+  server.setCookie({ name: "userID", value: userID });
+  server.setCookie({ name: "email", value: e });
+  server.setCookie({ name: "isAdmin", value: isAdmin });
 }
 
 async function deleteLOs(server) {
