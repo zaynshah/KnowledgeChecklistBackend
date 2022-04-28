@@ -21,8 +21,13 @@ await client.connect();
 //const PORT = 8080;
 const corsConfig = abcCors({
   // origin: process.env.REACT_APP_API_URL,
-  origin: "*",
-
+  // origin: "*",
+  origin: [
+    "https://97607209-5461-42ff-b81b-8910b6b17b8c--sigma-knowledge.netlify.app",
+    "https://sigma-checklist.netlify.app",
+    "http://localhost:3000",
+    "http://localhost:3001",
+  ],
   allowedHeaders: ["Authorization", "Content-Type", "Accept", "Origin", "User-Agent"],
   credentials: true,
 });
