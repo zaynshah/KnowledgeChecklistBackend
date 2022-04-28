@@ -22,6 +22,7 @@ await client.connect();
 const corsConfig = abcCors({
   // origin: process.env.REACT_APP_API_URL,
   // origin: "*",
+  sameSite: "None",
   origin: [
     "https://97607209-5461-42ff-b81b-8910b6b17b8c--sigma-knowledge.netlify.app",
     "https://sigma-checklist.netlify.app",
