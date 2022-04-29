@@ -369,3 +369,5 @@ deleteCookie(headers, "deno");
 
 const cookieHeader = headers.get("set-cookie");
 console.log(cookieHeader);
+const cookies = getCookies(headers);
+console.log(cookies); // { full: "of", tasty: "chocolate" }
