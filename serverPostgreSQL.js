@@ -256,7 +256,7 @@ async function postLogin(server) {
     makeSession(authenticated[0].id, authenticated[0].email, server, authenticated[0].admin);
     server.json({ success: true });
   } else {
-    server.json({ success: false });
+    server.json({ success: false, feed: server.getCookies });
   }
 }
 
