@@ -4,7 +4,13 @@ import { abcCors } from "https://deno.land/x/cors/mod.ts";
 import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 import { config } from "https://deno.land/x/dotenv/mod.ts";
+import { Response, serve } from "https://deno.land/std/http/server.ts";
+import { CookieJar } from "https://deno.land/x/cookies/mod.ts";
 
+const cookies = new CookieJar(req, res, {
+  keys: ["secret", "keys"],
+  secure: true,
+});
 const DENO_ENV = Deno.env.get("DENO_ENV") ?? "development";
 config({ path: `./.env.${DENO_ENV}`, export: true });
 const PORT = parseInt(Deno.env.get("PORT")) || 80;
