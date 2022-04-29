@@ -35,11 +35,8 @@ const corsConfig = abcCors({
 const app = new Application();
 app
   .use(corsConfig)
-  .use(cookiesMiddleware())
-  .use(function (req, res) {
-    // get the user cookies using universal-cookie
-    req.universalCookies.get("email");
-  })
+  .use(router.routes())
+  .use(router.allowedMethods())
   .get("/:user_id/LOs", getLOs)
   .get("/cohorts/:cohort_id/LOs", getCohortLOs)
   .get("/cohorts", getCohorts)
