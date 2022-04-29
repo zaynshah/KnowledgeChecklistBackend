@@ -18,8 +18,9 @@ confige = {
   user: "postgres",
 };
 const client = new Client("postgres://iwiyqnnt:Z1YjV6TH1xzQBUsFQo8YR94_ZC01ILsQ@tai.db.elephantsql.com/iwiyqnnt");
+// const client = new Client(confige);
 await client.connect();
-//const PORT = 8080;
+// const PORT = 8080;
 const corsConfig = abcCors({
   // origin: process.env.REACT_APP_API_URL,
   // origin: "*",
@@ -191,7 +192,6 @@ async function postLO(server) {
     text: "SELECT DISTINCT(users.email), users.cohort_id, users.id FROM learning_objectives JOIN users ON users.cohort_id = learning_objectives.cohort_id WHERE users.cohort_id = $1",
     args: [cohort_id],
   });
-  console.log(check);
 
   check.rows.forEach((i) =>
     client.queryArray({
@@ -223,7 +223,7 @@ async function postSignup(server) {
     text: "SELECT email FROM users WHERE email = $1",
     args: [email],
   });
-  console.log(checkRepeatEmails.rows);
+
   if (checkRepeatEmails.rows[0] != undefined) {
     return server.json({ error: "Email already in use" }, 400);
   }
@@ -258,9 +258,9 @@ async function postLogin(server) {
     makeSession(authenticated[0].id, authenticated[0].email, server, authenticated[0].admin);
 
     const cookies = getCookies(headers);
-    server.json({ success: true, asd: 2, feed: cookies });
+    console.log(cookies);
+    server.json({ success: true, info: cookies });
   } else {
-    headers.set("Cookie", "full=of; tasty=chocolate", "expires:expiryDate");
     const cookies = getCookies(headers);
     server.json({ success: false, asd: 2, feed: cookies });
   }
@@ -346,18 +346,18 @@ async function makeSession(userID, e, server, isAdmin) {
 
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 1);
-  headers.set("Cookie", "full=of; tasty=chocolate", "expires:expiryDate");
-  server.setCookie(
-    {
-      name: "sessionId",
-      value: sessionID,
-      expires: expiryDate,
-    },
-    { secure: true, sameSite: "none" }
-  );
-  server.setCookie({ name: "userID", value: userID, expires: expiryDate }, { secure: true, sameSite: "none" });
-  server.setCookie({ name: "email", value: e, expires: expiryDate }, { secure: true, sameSite: "none" });
-  server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate }, { secure: true, sameSite: "none" });
+  headers.set("Cookie", `sessionId=${sessionID} userID=${userID}; email=${e}; isAdmin=${isAdmin}`, "expires:expiryDate");
+  // server.setCookie(
+  //   {
+  //     name: "sessionId",
+  //     value: sessionID,
+  //     expires: expiryDate,
+  //   },
+  //   { secure: true, sameSite: "none" }
+  // );
+  // server.setCookie({ name: "userID", value: userID, expires: expiryDate }, { secure: true, sameSite: "none" });
+  // server.setCookie({ name: "email", value: e, expires: expiryDate }, { secure: true, sameSite: "none" });
+  // server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate }, { secure: true, sameSite: "none" });
 }
 
 async function deleteLOs(server) {
@@ -374,7 +374,8 @@ async function deleteLOs(server) {
 // expiryDate.setDate(expiryDate.getDate() + 1);
 // console.log(expiryDate);
 // const headers = new Headers();
-// headers.set("Cookie", "full=of; tasty=chocolate", "expires:expiryDate");
+// let a = "dfdf";
+// headers.set("Cookie", `full=of; tasty=${a}`, "expires:expiryDate");
 
-// const cookies = getCookies(headers);
-// console.log(cookies); // { full: "of", tasty: "chocolate" }
+// // const cookies = getCookies(headers);
+// // console.log(cookies); // { full: "of", tasty: "chocolate" }
