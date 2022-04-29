@@ -166,7 +166,7 @@ async function checkValidUrl(url) {
 async function postLO(server) {
   const { cohort_id, topic, learning_objective, notConfident, confident } = await server.body;
   if (learning_objective.length <= 10) {
-    return server.json({ error: "learning objective must be more than 10 characters!" }, 400);
+    return server.json({ error: "learnin objective must be more than 10 characters!" }, 400);
   }
 
   if (confident.length > 0) {
