@@ -4,6 +4,7 @@ import { abcCors } from "https://deno.land/x/cors/mod.ts";
 import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
 import { v4 } from "https://deno.land/std/uuid/mod.ts";
 import { config } from "https://deno.land/x/dotenv/mod.ts";
+import { deleteCookie, setCookie, getCookies } from "https://deno.land/std/http/cookie.ts";
 
 const DENO_ENV = Deno.env.get("DENO_ENV") ?? "development";
 config({ path: `./.env.${DENO_ENV}`, export: true });
@@ -340,17 +341,18 @@ async function makeSession(userID, e, server, isAdmin) {
 
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 1);
-  server.setCookie(
-    {
-      name: "sessionId",
-      value: sessionID,
-      expires: expiryDate,
-    },
-    { secure: true, sameSite: "none" }
-  );
-  server.setCookie({ name: "userID", value: userID, expires: expiryDate }, { secure: true, sameSite: "none" });
-  server.setCookie({ name: "email", value: e, expires: expiryDate }, { secure: true, sameSite: "none" });
-  server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate }, { secure: true, sameSite: "none" });
+
+  // server.setCookie(
+  //   {
+  //     name: "sessionId",
+  //     value: sessionID,
+  //     expires: expiryDate,
+  //   },
+  //   { secure: true, sameSite: "none" }
+  // );
+  // server.setCookie({ name: "userID", value: userID, expires: expiryDate }, { secure: true, sameSite: "none" });
+  // server.setCookie({ name: "email", value: e, expires: expiryDate }, { secure: true, sameSite: "none" });
+  // server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate }, { secure: true, sameSite: "none" });
 }
 
 async function deleteLOs(server) {
@@ -362,3 +364,9 @@ async function deleteLOs(server) {
   await client.queryArray({ text: query2, args: [learning_objective, cohort_id] });
   server.json({ success: true }, 200);
 }
+
+const headers = new Headers();
+headers.set("Cookie", "full=of; tasty=chocolate");
+
+const cookies = getCookies(headers);
+console.log(cookies); // { full: "of", tasty: "chocolate" }
