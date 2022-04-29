@@ -22,12 +22,12 @@ const client = new Client("postgres://iwiyqnnt:Z1YjV6TH1xzQBUsFQo8YR94_ZC01ILsQ@
 await client.connect();
 // const PORT = 8080;
 const corsConfig = abcCors({
+  sameSite: "None",
   // origin: process.env.REACT_APP_API_URL,
   // origin: "*",
   origin: [
-    "https://97607209-5461-42ff-b81b-8910b6b17b8c--sigma-knowledge.netlify.app",
+    "https://626c6cc5126089073a4c7abc--sigma-checklist.netlify.app",
     "https://sigma-checklist.netlify.app",
-    "https://sigma-knowledge-checklist.netlify.app",
     "https://626c6338800bc3008106bff8--sigma-knowledge-checklist.netlify.app",
     "http://localhost:3000",
     "http://localhost:3001",
