@@ -11,6 +11,31 @@ const cookies = new CookieJar(req, res, {
   keys: ["secret", "keys"],
   secure: true,
 });
+
+for await (const req of server) {
+  const res: Response = {
+    status: 404,
+    headers: new Headers([["Content-Type", "text/plain"]]),
+  };
+  const cookies = new CookieJar(req, res, {
+    keys: ["secret", "keys"],
+    secure: true,
+  });
+
+  // Get a cookie (sign it to protect against spoofing)
+  const lastVisit = cookies.get("LastVisit", { signed: true });
+  if (!lastVisit) {
+    res.body = "Welcome first time user!";
+    // Set the cookie to a value
+    cookies.set("LastVisit", Date.now(), { signed: true });
+  } else {
+    const timestamp = new Date(lastVisit).toISOString();
+    res.body = `Welcome back! Nothing much changed since your last visit at ${timestamp}.`;
+  }
+
+  req.respond(res);
+}
+
 const DENO_ENV = Deno.env.get("DENO_ENV") ?? "development";
 config({ path: `./.env.${DENO_ENV}`, export: true });
 const PORT = parseInt(Deno.env.get("PORT")) || 80;
