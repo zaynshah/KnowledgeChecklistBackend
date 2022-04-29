@@ -368,11 +368,13 @@ async function deleteLOs(server) {
 const expiryDate = new Date();
 expiryDate.setDate(expiryDate.getDate() + 1);
 const headers = new Headers();
-headers.set("Cookie", "full=of; tasty=chocolate");
+headers.set("Cookie", "full=of; tasty=chocolate", "expires:expiryDate");
 
 const cookies = getCookies(headers);
 console.log(cookies); // { full: "of", tasty: "chocolate" }
-deleteCookie(headers, expiryDate);
-
+//deleteCookie(headers);
+let a = { name: "dfsf", value: "dsfdsf", expires: expiryDate };
+setCookie(headers, a);
 const cookieHeader = headers.get("set-cookie");
 console.log(headers);
+console.log(cookieHeader);
