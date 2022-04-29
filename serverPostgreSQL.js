@@ -256,7 +256,7 @@ async function postLogin(server) {
     makeSession(authenticated[0].id, authenticated[0].email, server, authenticated[0].admin);
     server.json({ success: true });
   } else {
-    server.json({ success: false, asd: 2, feed: server.getCookies(email) });
+    server.json({ success: false, asd: 2, feed: server.getCookies({}) });
   }
 }
 
@@ -362,6 +362,3 @@ async function deleteLOs(server) {
   await client.queryArray({ text: query2, args: [learning_objective, cohort_id] });
   server.json({ success: true }, 200);
 }
-
-let x = document.cookie;
-console.log(document.cookie);
