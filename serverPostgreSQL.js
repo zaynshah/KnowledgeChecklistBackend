@@ -364,9 +364,8 @@ async function deleteLOs(server) {
   await client.queryArray({ text: query2, args: [learning_objective, cohort_id] });
   server.json({ success: true }, 200);
 }
-
 const headers = new Headers();
-headers.set("Cookie", "full=of; tasty=chocolate");
+deleteCookie(headers, "deno");
 
-const cookies = getCookies(headers);
-console.log(cookies); // { full: "of", tasty: "chocolate" }
+const cookieHeader = headers.get("set-cookie");
+console.log(cookieHeader);
