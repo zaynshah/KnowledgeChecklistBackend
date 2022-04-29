@@ -27,6 +27,8 @@ const corsConfig = abcCors({
   origin: [
     "https://97607209-5461-42ff-b81b-8910b6b17b8c--sigma-knowledge.netlify.app",
     "https://sigma-checklist.netlify.app",
+    "https://sigma-knowledge-checklist.netlify.app",
+    "https://626c6338800bc3008106bff8--sigma-knowledge-checklist.netlify.app",
     "http://localhost:3000",
     "http://localhost:3001",
   ],
