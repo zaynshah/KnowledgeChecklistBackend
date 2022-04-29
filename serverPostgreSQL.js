@@ -365,7 +365,7 @@ async function deleteLOs(server) {
   server.json({ success: true }, 200);
 }
 const headers = new Headers();
-deleteCookie(headers, "deno");
+deleteCookie(headers, "deno=sdf");
 
 const cookieHeader = headers.get("set-cookie");
 console.log(cookieHeader);
