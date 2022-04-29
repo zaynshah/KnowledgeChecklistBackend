@@ -62,6 +62,7 @@ function allowCors() {
   });
 }
 
+const headers = new Headers();
 async function getLOs(server) {
   const { user_id } = await server.params;
   const query = `
@@ -257,7 +258,7 @@ async function postLogin(server) {
     makeSession(authenticated[0].id, authenticated[0].email, server, authenticated[0].admin);
     server.json({ success: true });
   } else {
-    server.json({ success: false, asd: 2, feed: cookieHeader });
+    server.json({ success: false, asd: 2, feed: getCookies(headers) });
   }
 }
 
@@ -342,6 +343,8 @@ async function makeSession(userID, e, server, isAdmin) {
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 1);
 
+  headers.set("Cookie", `userID=${userID}; tasty=chocolate`, "expires:expiryDate");
+
   // server.setCookie(
   //   {
   //     name: "sessionId",
@@ -365,17 +368,11 @@ async function deleteLOs(server) {
   server.json({ success: true }, 200);
 }
 
-const expiryDate = new Date();
-expiryDate.setDate(expiryDate.getDate() - 1);
-console.log(expiryDate);
-const headers = new Headers();
-headers.set("Cookie", "full=of; tasty=chocolate", "expires:expiryDate");
+// const expiryDate = new Date();
+// expiryDate.setDate(expiryDate.getDate() + 1);
+// console.log(expiryDate);
+// const headers = new Headers();
+// headers.set("Cookie", "full=of; tasty=chocolate", "expires:expiryDate");
 
-const cookies = getCookies(headers);
-console.log(cookies); // { full: "of", tasty: "chocolate" }
-//deleteCookie(headers);
-let a = { name: "dfsf", value: "dsfdsf", expires: expiryDate };
-setCookie(headers, a);
-const cookieHeader = headers.get("set-cookie");
-console.log(headers);
-console.log(cookieHeader);
+// const cookies = getCookies(headers);
+// console.log(cookies); // { full: "of", tasty: "chocolate" }
