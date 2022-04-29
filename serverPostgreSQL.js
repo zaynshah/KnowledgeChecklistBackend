@@ -256,9 +256,10 @@ async function postLogin(server) {
 
   if (authenticated.length && (await bcrypt.compare(password, authenticated[0].encrypted_password))) {
     makeSession(authenticated[0].id, authenticated[0].email, server, authenticated[0].admin);
-    server.json({ success: true });
+
+    const cookies = getCookies(headers);
+    server.json({ success: false, asd: 2, feed: cookies });
   } else {
-    headers.set("Cookie", "full=of; tasty=chocolate", "expires:expiryDate");
     const cookies = getCookies(headers);
     server.json({ success: false, asd: 2, feed: cookies });
   }
@@ -344,7 +345,7 @@ async function makeSession(userID, e, server, isAdmin) {
 
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 1);
-
+  headers.set("Cookie", "full=of; tasty=chocolate", "expires:expiryDate");
   // server.setCookie(
   //   {
   //     name: "sessionId",
