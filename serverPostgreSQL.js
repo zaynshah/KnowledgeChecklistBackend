@@ -35,7 +35,7 @@ const corsConfig = abcCors({
 const app = new Application();
 app
   .use(corsConfig)
-  // .use(router.routes())
+  .use(router.routes())
   // .use(router.allowedMethods())
   .get("/:user_id/LOs", getLOs)
   .get("/cohorts/:cohort_id/LOs", getCohortLOs)
