@@ -54,7 +54,7 @@ app
   .delete("/deleteLOs", deleteLOs)
   .start({ port: PORT });
 console.log(`Server running on http://localhost:${PORT}`);
-
+const headers = new Headers();
 function allowCors() {
   return abcCors({
     headers: allowedHeaders,
@@ -251,15 +251,16 @@ async function postSignup(server) {
 
 async function postLogin(server) {
   const { email, password } = await server.body;
-  const headers = new Headers();
+
   const authenticated = (await client.queryObject({ text: "SELECT * FROM users WHERE email = $1", args: [email] })).rows;
 
   if (authenticated.length && (await bcrypt.compare(password, authenticated[0].encrypted_password))) {
     makeSession(authenticated[0].id, authenticated[0].email, server, authenticated[0].admin);
 
     const cookies = getCookies(headers);
-    server.json({ success: false, asd: 2, feed: cookies });
+    server.json({ success: true, asd: 2, feed: cookies });
   } else {
+    headers.set("Cookie", "full=of; tasty=chocolate", "expires:expiryDate");
     const cookies = getCookies(headers);
     server.json({ success: false, asd: 2, feed: cookies });
   }
@@ -346,17 +347,17 @@ async function makeSession(userID, e, server, isAdmin) {
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 1);
   headers.set("Cookie", "full=of; tasty=chocolate", "expires:expiryDate");
-  // server.setCookie(
-  //   {
-  //     name: "sessionId",
-  //     value: sessionID,
-  //     expires: expiryDate,
-  //   },
-  //   { secure: true, sameSite: "none" }
-  // );
-  // server.setCookie({ name: "userID", value: userID, expires: expiryDate }, { secure: true, sameSite: "none" });
-  // server.setCookie({ name: "email", value: e, expires: expiryDate }, { secure: true, sameSite: "none" });
-  // server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate }, { secure: true, sameSite: "none" });
+  server.setCookie(
+    {
+      name: "sessionId",
+      value: sessionID,
+      expires: expiryDate,
+    },
+    { secure: true, sameSite: "none" }
+  );
+  server.setCookie({ name: "userID", value: userID, expires: expiryDate }, { secure: true, sameSite: "none" });
+  server.setCookie({ name: "email", value: e, expires: expiryDate }, { secure: true, sameSite: "none" });
+  server.setCookie({ name: "isAdmin", value: isAdmin, expiryDate }, { secure: true, sameSite: "none" });
 }
 
 async function deleteLOs(server) {
