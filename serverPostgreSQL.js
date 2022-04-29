@@ -258,7 +258,6 @@ async function postLogin(server) {
     makeSession(authenticated[0].id, authenticated[0].email, server, authenticated[0].admin);
 
     const cookies = getCookies(headers);
-    console.log(cookies);
     server.json({ success: true, info: cookies });
   } else {
     const cookies = getCookies(headers);
@@ -273,7 +272,7 @@ async function postScore(server) {
     args: [score, isActive, userID, LO],
   });
   const LOs = (await client.queryObject({ text: "SELECT * FROM results WHERE user_id = $1 ORDER BY id desc", args: [userID] })).rows;
-  console.log(LOs);
+
   return server.json({ LOs: LOs }, 200);
 }
 
@@ -346,7 +345,7 @@ async function makeSession(userID, e, server, isAdmin) {
 
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 1);
-  headers.set("Cookie", `sessionId=${sessionID} userID=${userID}; email=${e}; isAdmin=${isAdmin}`, "expires:expiryDate");
+  headers.set("Cookie", `sessionId=${sessionID}; userID=${userID}; email=${e}; isAdmin=${isAdmin}`, "expires:expiryDate");
   // server.setCookie(
   //   {
   //     name: "sessionId",
@@ -369,13 +368,3 @@ async function deleteLOs(server) {
   await client.queryArray({ text: query2, args: [learning_objective, cohort_id] });
   server.json({ success: true }, 200);
 }
-
-// const expiryDate = new Date();
-// expiryDate.setDate(expiryDate.getDate() + 1);
-// console.log(expiryDate);
-// const headers = new Headers();
-// let a = "dfdf";
-// headers.set("Cookie", `full=of; tasty=${a}`, "expires:expiryDate");
-
-// // const cookies = getCookies(headers);
-// // console.log(cookies); // { full: "of", tasty: "chocolate" }

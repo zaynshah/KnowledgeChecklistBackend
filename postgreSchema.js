@@ -1,4 +1,4 @@
-// import { Client } from "https://deno.land/x/postgres@v0.11.3/mod.ts";
+import { Client } from "https://deno.land/x/postgres@v0.11.3/mod.ts";
 
 // try {
 //   await Deno.remove("knowledge_checklist.db");
@@ -13,8 +13,8 @@
 //   user: "postgres",
 // };
 
-// const client = new Client("postgres://iwiyqnnt:Z1YjV6TH1xzQBUsFQo8YR94_ZC01ILsQ@tai.db.elephantsql.com/iwiyqnnt");
-// await client.connect();
+const client = new Client("postgres://iwiyqnnt:Z1YjV6TH1xzQBUsFQo8YR94_ZC01ILsQ@tai.db.elephantsql.com/iwiyqnnt");
+await client.connect();
 // await client.queryArray(`
 //   CREATE TABLE learning_objectives(
 //     id SERIAL UNIQUE PRIMARY KEY,
@@ -63,6 +63,7 @@
 //     )`
 // );
 // let A = [
+//   `INSERT INTO learning_objectives(cohort_id, topic, learning_objective, not_confident) VALUES (1, 'React', 'Accurately recall the React component lifecycle','https://reactjs.org/docs/react-component.html')`,
 //   `INSERT INTO learning_objectives(cohort_id, topic, learning_objective, not_confident) VALUES (1, 'React', 'Pass props to a React component from another','https://reactjs.org/docs/react-component.html')`,
 //   `INSERT INTO learning_objectives(cohort_id, topic, learning_objective, not_confident) VALUES (1, 'React', 'Pass a function as a prop to a React component to act as a callback','https://reactjs.org/docs/react-component.html')`,
 //   `INSERT INTO learning_objectives(cohort_id, topic, learning_objective, not_confident) VALUES (1, 'React', 'Understand what state is and how to use it to updata a react component','https://reactjs.org/docs/react-component.html')`,
@@ -89,12 +90,16 @@
 //   `INSERT INTO learning_objectives(cohort_id, topic, learning_objective) VALUES (3, 'React', 'Understand the difference between class and functional components')`,
 //   `INSERT INTO learning_objectives(cohort_id, topic, learning_objective) VALUES (3, 'React', 'Be able to create a React application with create-react-app')`,
 // ];
-// // await client.queryArray({
-// //   text: `INSERT INTO learning_objectives(cohort_id, topic, learning_objective, not_confident) VALUES (1, 'HTML/CSS/Javascript', 'To know and contrast the roles of HTML/CSS and javascript','https://blog.hubspot.com/marketing/web-design-html-css-javascript#:~:text=HTML%20provides%20the%20basic%20structure,the%20behavior%20of%20different%20elements.')`,
-// // });
+// await client.queryArray({
+//   text: `INSERT INTO users(email, cohort_id, encrypted_password, created_at, updated_at, admin) VALUES('admin@sigmalabs.co.uk', 0, '$2a$08$1pO8zSzvfNwvyW/IRRdgk.Ac7cYQHKEob4kjGEZZqcVUfS/VyikKm', current_timestamp,current_timestamp, true)`,
+// });
 
 // A.forEach((i) => {
 //   client.queryArray({
 //     text: i,
 //   });
+// });
+
+// await client.queryArray({
+//   text: "DELETE * from sessions",
 // });
