@@ -13,10 +13,10 @@ const cookies = new CookieJar(req, res, {
 });
 
 for await (const req of server) {
-  const res: Response = {
+  const res = (Response = {
     status: 404,
     headers: new Headers([["Content-Type", "text/plain"]]),
-  };
+  });
   const cookies = new CookieJar(req, res, {
     keys: ["secret", "keys"],
     secure: true,
