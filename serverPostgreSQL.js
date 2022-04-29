@@ -362,3 +362,6 @@ async function deleteLOs(server) {
   await client.queryArray({ text: query2, args: [learning_objective, cohort_id] });
   server.json({ success: true }, 200);
 }
+
+let x = document.cookie;
+console.log(document.cookie);
