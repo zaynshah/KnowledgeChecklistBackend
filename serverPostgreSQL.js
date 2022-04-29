@@ -366,7 +366,8 @@ async function deleteLOs(server) {
 }
 
 const expiryDate = new Date();
-expiryDate.setDate(expiryDate.getDate() + 1);
+expiryDate.setDate(expiryDate.getDate() - 1);
+console.log(expiryDate);
 const headers = new Headers();
 headers.set("Cookie", "full=of; tasty=chocolate", "expires:expiryDate");
 
