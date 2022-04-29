@@ -364,12 +364,15 @@ async function deleteLOs(server) {
   await client.queryArray({ text: query2, args: [learning_objective, cohort_id] });
   server.json({ success: true }, 200);
 }
+
+const expiryDate = new Date();
+expiryDate.setDate(expiryDate.getDate() + 1);
 const headers = new Headers();
 headers.set("Cookie", "full=of; tasty=chocolate");
 
 const cookies = getCookies(headers);
 console.log(cookies); // { full: "of", tasty: "chocolate" }
-deleteCookie(headers, "deno");
+deleteCookie(headers, expiryDate);
 
 const cookieHeader = headers.get("set-cookie");
 console.log(headers);
