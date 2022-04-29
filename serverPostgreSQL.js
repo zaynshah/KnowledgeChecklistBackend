@@ -62,7 +62,6 @@ function allowCors() {
   });
 }
 
-const headers = new Headers();
 async function getLOs(server) {
   const { user_id } = await server.params;
   const query = `
@@ -252,6 +251,7 @@ async function postSignup(server) {
 
 async function postLogin(server) {
   const { email, password } = await server.body;
+  console.log(server);
   const authenticated = (await client.queryObject({ text: "SELECT * FROM users WHERE email = $1", args: [email] })).rows;
 
   if (authenticated.length && (await bcrypt.compare(password, authenticated[0].encrypted_password))) {
@@ -343,7 +343,7 @@ async function makeSession(userID, e, server, isAdmin) {
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 1);
 
-  headers.set("Cookie", `userID=${userID}; tasty=chocolate`, "expires:expiryDate");
+  headers.set("Cookie", "full=of; tasty=chocolate", "expires:expiryDate");
 
   // server.setCookie(
   //   {
@@ -368,6 +368,7 @@ async function deleteLOs(server) {
   server.json({ success: true }, 200);
 }
 
+const headers = new Headers();
 // const expiryDate = new Date();
 // expiryDate.setDate(expiryDate.getDate() + 1);
 // console.log(expiryDate);
