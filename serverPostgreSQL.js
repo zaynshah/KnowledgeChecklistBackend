@@ -251,14 +251,15 @@ async function postSignup(server) {
 
 async function postLogin(server) {
   const { email, password } = await server.body;
-  console.log(server);
+  const headers = new Headers();
   const authenticated = (await client.queryObject({ text: "SELECT * FROM users WHERE email = $1", args: [email] })).rows;
 
   if (authenticated.length && (await bcrypt.compare(password, authenticated[0].encrypted_password))) {
     makeSession(authenticated[0].id, authenticated[0].email, server, authenticated[0].admin);
     server.json({ success: true });
   } else {
-    server.json({ success: false, asd: 2, feed: server.header });
+    const cookies = getCookies(headers);
+    server.json({ success: false, asd: 2, feed: cookies });
   }
 }
 
@@ -368,7 +369,6 @@ async function deleteLOs(server) {
   server.json({ success: true }, 200);
 }
 
-const headers = new Headers();
 // const expiryDate = new Date();
 // expiryDate.setDate(expiryDate.getDate() + 1);
 // console.log(expiryDate);
