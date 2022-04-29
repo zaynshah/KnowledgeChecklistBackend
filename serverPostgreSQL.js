@@ -32,9 +32,17 @@ const corsConfig = abcCors({
   credentials: true,
 });
 
+const express = require("express");
+const cookiesMiddleware = require("universal-cookie-express");
 const app = new Application();
+
 app
   .use(corsConfig)
+  .use(cookiesMiddleware())
+  .use(function (req, res) {
+    // get the user cookies using universal-cookie
+    req.universalCookies.get("userID");
+  })
   .get("/:user_id/LOs", getLOs)
   .get("/cohorts/:cohort_id/LOs", getCohortLOs)
   .get("/cohorts", getCohorts)
